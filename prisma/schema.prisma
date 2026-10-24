@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// A single fruit / vegetable / egg SKU in the MAGADI GREENS catalogue.
+model Product {
+  /// PLU number, also used as the public id on the storefront.
+  id        Int       @id
+  name      String
+  /// Category code: v (vegetables), l (leafy), f (fruits), m (mangoes), x (exotic), o (eggs & more).
+  cat       String
+  /// Selling unit: kg, pc, bunch, pkt.
+  unit      String
+  /// Sale price in INR. null means "price at store" (weighed at counter).
+  price     Float?
+  /// Maximum retail price. null means no discount badge.
+  mrp       Float?
+  /// Kannada name (displayed under the English name).
+  kn        String    @default("")
+  /// In stock today.
+  stock     Boolean   @default(true)
+  /// Path to the photo (e.g. /images/products/3.jpg?v=123). null = emoji only.
+  img       String?
+  updatedAt DateTime  @updatedAt
+  createdAt DateTime  @default(now())
+
+  @@index([cat])
+  @@index([stock])
+}
+
+/// Admin sessions (very lightweight, single shared password approach).
+model AdminSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}

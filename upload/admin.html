@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#14401a" />
+<title>MAGADI GREENS · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{--g900:#14401a;--g700:#1f6b2a;--g600:#2b8a35;--g100:#dcefdc;--g50:#eef6ee;--ink:#18241a;--mute:#66756a;--line:#e4eae4;--bg:#f6f8f4;--red:#d92d20;--amber:#f5b82e;--safe:env(safe-area-inset-bottom,0px)}
+  *{box-sizing:border-box;margin:0}
+  body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+  button,input,select{font:inherit;color:inherit}
+  button{cursor:pointer;border:0;background:none}
+  [hidden]{display:none!important}
+  :focus-visible{outline:3px solid var(--g600);outline-offset:2px;border-radius:8px}
+  .wrap{max-width:760px;margin:0 auto;padding:0 14px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:700;font-size:14px;background:var(--g600);color:#fff}
+  .btn:hover{background:var(--g700)}
+  .btn:disabled{background:#cfd8cf;color:#7d897f;cursor:not-allowed}
+  .btn.ghost{background:#fff;color:var(--g700);border:1.5px solid var(--line)}
+  .btn.ghost:hover{background:var(--g50)}
+  .field{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:15px;background:#fff}
+  .field:focus{border-color:var(--g600);outline:0;box-shadow:0 0 0 3px var(--g100)}
+
+  /* Setup */
+  #setup{padding:28px 0 60px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px}
+  #setup h1{font-size:22px;font-weight:800;color:var(--g900);margin-bottom:4px}
+  #setup p.sub{color:var(--mute);font-size:14px;margin-bottom:18px}
+  .fg{display:grid;gap:12px}
+  .fg label{display:grid;gap:5px;font-size:12.5px;font-weight:700;color:var(--mute)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .chk{display:flex!important;grid-auto-flow:column;align-items:center;gap:8px;justify-content:start;font-weight:500!important;font-size:13.5px!important;color:var(--ink)!important}
+  .help{margin-top:18px;font-size:13px;color:#334236;background:var(--g50);border-radius:14px;padding:14px 16px}
+  .help ol{padding-left:18px;display:grid;gap:4px;margin-top:6px}
+  .msg{font-size:13.5px;color:var(--red);min-height:18px}
+
+  /* App header + controls */
+  header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+  .top{display:flex;align-items:center;gap:10px;padding:10px 0}
+  .top h1{font-size:17px;font-weight:800;color:var(--g900);margin-right:auto;line-height:1.2}
+  .top h1 small{display:block;font-size:11.5px;font-weight:500;color:var(--mute)}
+  .top a,.top button{font-size:13px;font-weight:600;padding:8px 12px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
+  .ctl{display:grid;grid-template-columns:1fr 150px;gap:8px;padding:0 0 10px}
+  .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;background:#fff;border:1px solid var(--line);white-space:nowrap}
+  .chip[aria-pressed=true]{background:var(--g900);color:#fff;border-color:var(--g900)}
+  .count{font-size:12.5px;color:var(--mute);margin:12px 2px 8px}
+
+  /* Rows */
+  #list{display:grid;gap:10px;padding-bottom:calc(110px + var(--safe))}
+  .row{background:#fff;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:16px;padding:12px;display:grid;grid-template-columns:76px 1fr;gap:12px}
+  .row.dirty{border-left-color:var(--amber);background:#fffdf6}
+  .row.out .mid b{color:var(--mute)}
+  .ph{position:relative;width:76px;height:57px;border-radius:12px;background:var(--g50);display:grid;place-items:center;font-size:30px;overflow:hidden;cursor:pointer;border:1.5px dashed #b7d3b9}
+  .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .ph .cam{position:absolute;right:3px;bottom:3px;font-size:12px;background:#fff;border-radius:999px;width:20px;height:20px;display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .mid b{font-size:14.5px;display:block;line-height:1.25}
+  .mid small{font-size:12px;color:var(--mute)}
+  .tg{display:flex;align-items:center;gap:12px;margin-top:6px;flex-wrap:wrap}
+  .sw{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .sw input{appearance:none;width:34px;height:20px;border-radius:999px;background:#cfd8cf;position:relative;cursor:pointer;transition:background .15s;flex:none}
+  .sw input::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+  .sw input:checked{background:var(--g600)}
+  .sw input:checked::after{transform:translateX(14px)}
+  .lnk{font-size:12px;font-weight:600;color:var(--red);text-decoration:underline}
+  .nums{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .nums label{display:grid;gap:3px;font-size:11.5px;font-weight:700;color:var(--mute)}
+  .nums input{width:100%;padding:10px 10px;border-radius:10px;border:1px solid var(--line);font-size:15px;font-weight:700;background:#fff}
+  .nums input:focus{border-color:var(--g600);outline:0;box-shadow:0 0 0 3px var(--g100)}
+  .nums input.bad{border-color:var(--red);box-shadow:0 0 0 3px #fde4e4}
+  .warn{grid-column:1/-1;font-size:12px;color:#b54708;background:#fff4e5;border-radius:8px;padding:5px 10px}
+  .empty{text-align:center;color:var(--mute);padding:40px 10px}
+
+  /* Save bar */
+  .savebar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + var(--safe));transform:translateY(110%);transition:transform .25s}
+  .savebar.show{transform:none}
+  .savebar .in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px}
+  .savebar .t{flex:1;font-size:14px;font-weight:700}
+  .savebar .t small{display:block;font-weight:500;color:var(--mute);font-size:12px}
+  .toast{position:fixed;left:50%;top:70px;z-index:60;transform:translate(-50%,-20px);background:#18241a;color:#fff;padding:11px 18px;border-radius:14px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;max-width:92vw;text-align:center}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast.err{background:var(--red)}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<main id="setup" class="wrap" hidden>
+  <div class="card">
+    <h1>MAGADI GREENS admin</h1>
+    <p class="sub">Connect once. Changes you save here update the live store.</p>
+    <form class="fg" id="setupForm" autocomplete="off">
+      <div class="two">
+        <label>GitHub username<input class="field" id="cOwner" required /></label>
+        <label>Repository<input class="field" id="cRepo" required /></label>
+      </div>
+      <label>Branch<input class="field" id="cBranch" value="main" required /></label>
+      <label>Access token<input class="field" id="cToken" type="password" placeholder="github_pat_…" required autocomplete="off" /></label>
+      <label class="chk"><input type="checkbox" id="cRemember" checked /> Keep me signed in on this device</label>
+      <p class="msg" id="setupMsg" role="alert"></p>
+      <button class="btn" id="connectBtn" type="submit">Connect</button>
+    </form>
+    <div class="help"><b>Get a token (2 minutes)</b>
+      <ol>
+        <li>GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token.</li>
+        <li>Repository access: <b>Only select repositories</b> → pick this store's repo.</li>
+        <li>Permissions → Repository → <b>Contents: Read and write</b>. Nothing else.</li>
+        <li>Copy the token and paste it above. Use it only on your own device.</li>
+      </ol>
+    </div>
+  </div>
+</main>
+
+<div id="app" hidden>
+  <header><div class="wrap">
+    <div class="top">
+      <h1>Catalogue<small id="meta"></small></h1>
+      <a href="./" target="_blank" rel="noopener">View store</a>
+      <button id="signOut">Sign out</button>
+    </div>
+    <div class="ctl">
+      <input class="field" id="q" type="search" placeholder="Search name or PLU number…" aria-label="Search" />
+      <select class="field" id="cat" aria-label="Category">
+        <option value="all">All categories</option><option value="v">Vegetables</option><option value="l">Leafy greens</option>
+        <option value="f">Fruits</option><option value="m">Mangoes</option><option value="x">Exotic &amp; imported</option><option value="o">Eggs &amp; more</option>
+      </select>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Filter"></div>
+  </div></header>
+  <main class="wrap">
+    <p class="count" id="count" aria-live="polite"></p>
+    <div id="list"></div>
+  </main>
+  <div class="savebar" id="savebar"><div class="in">
+    <div class="t"><span id="chg">0 changes</span><small id="chgNote">Live about a minute after saving</small></div>
+    <button class="btn ghost" id="discard">Discard</button>
+    <button class="btn" id="save">Save</button>
+  </div></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const EMOJI = { v: "🥦", l: "🌿", f: "🍎", m: "🥭", x: "🍈", o: "🥚" };
+const PER = { kg: "per kg", pc: "each", bunch: "per bunch", pkt: "per packet" };
+
+/* ---------------- GitHub storage ---------------- */
+let cfg = null, remote = null;            // remote = { sha, data }
+function loadCfg() {
+  try { return JSON.parse(localStorage.getItem("mg_admin") || sessionStorage.getItem("mg_admin") || "null"); } catch (e) { return null; }
+}
+const b64enc = s => { const b = new TextEncoder().encode(s); let bin = ""; for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(bin); };
+const b64dec = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g, "")), c => c.charCodeAt(0)));
+async function gh(path, opts = {}) {
+  const r = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}${path ? "/" + path : ""}`, {
+    cache: "no-store", ...opts,
+    headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + cfg.token, "X-GitHub-Api-Version": "2022-11-28", ...(opts.body ? { "Content-Type": "application/json" } : {}) }
+  });
+  if (!r.ok) { const e = new Error(r.statusText); e.status = r.status; try { e.detail = (await r.json()).message; } catch (x) {} throw e; }
+  return r.json();
+}
+function explain(e) {
+  if (!navigator.onLine || e instanceof TypeError) return "No internet connection. Try again when you're online.";
+  if (e.status === 401) return "GitHub rejected the token. Create a new one and sign in again.";
+  if (e.status === 403) return /rate limit/i.test(e.detail || "") ? "GitHub rate limit reached. Wait a few minutes and try again." : "The token doesn't have permission. It needs Contents: Read and write on this repo.";
+  if (e.status === 404) return "Can't find products.json. Check the username, repo and branch, and that products.json is uploaded.";
+  if (e.status === 409 || e.status === 422) return "Someone else changed the catalogue at the same time. Try saving again.";
+  return "Something went wrong (" + (e.status || "network") + "). " + (e.detail || "");
+}
+async function getJSON() {
+  const f = await gh(`contents/products.json?ref=${encodeURIComponent(cfg.branch)}`);
+  const data = JSON.parse(b64dec(f.content));
+  if (!data || !Array.isArray(data.items)) throw Object.assign(new Error("bad"), { status: 0, detail: "products.json is not in the expected format." });
+  return { sha: f.sha, data };
+}
+const putFile = (path, content, message, sha) => gh("contents/" + path, { method: "PUT", body: JSON.stringify({ message, content, sha, branch: cfg.branch }) });
+async function putImage(path, content, message) {
+  for (let i = 0; i < 2; i++) {
+    let sha; try { sha = (await gh(`contents/${path}?ref=${encodeURIComponent(cfg.branch)}`)).sha; } catch (e) { if (e.status !== 404) throw e; }
+    try { return await putFile(path, content, message, sha); } catch (e) { if (i || (e.status !== 409 && e.status !== 422)) throw e; }
+  }
+}
+const serialize = d => `{"updated":${JSON.stringify(d.updated)},"items":[\n` + d.items.map(i => JSON.stringify(i)).join(",\n") + "\n]}\n";
+
+/* ---------------- State ---------------- */
+const edits = {};       // id -> { price?, mrp?, stock?, photo? (dataURL, or null = remove) }
+const preview = {};     // id -> dataURL of a photo saved this session (live site may still be deploying)
+const invalid = new Set();
+const discBase = {};
+let filter = "all";
+const items = () => remote.data.items;
+const find = id => items().find(i => i.id === id);
+function view(id) {
+  const it = find(id), e = edits[id] || {};
+  return {
+    price: "price" in e ? e.price : it.price, mrp: "mrp" in e ? e.mrp : it.mrp, stock: "stock" in e ? e.stock : it.stock !== false,
+    photo: "photo" in e ? e.photo : (preview[id] || it.img || null)
+  };
+}
+const discOf = (p, m) => (m != null && p != null && m > p) ? Math.round((1 - p / m) * 1000) / 10 : null;
+function setEdit(id, patch) {
+  const it = find(id), e = edits[id] = { ...(edits[id] || {}), ...patch };
+  ["price", "mrp"].forEach(k => { if (k in e && e[k] === it[k]) delete e[k]; });
+  if ("stock" in e && e.stock === (it.stock !== false)) delete e.stock;
+  if ("photo" in e && e.photo === null && !it.img) delete e.photo;
+  if (!Object.keys(e).length) delete edits[id];
+}
+
+/* ---------------- Render ---------------- */
+let toastT;
+function toast(msg, err) { const t = $("#toast"); t.textContent = msg; t.classList.toggle("err", !!err); t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), err ? 5000 : 2600); }
+const fmt = n => n == null ? "" : String(n);
+function photoHTML(id, it) {
+  const v = view(id);
+  return v.photo ? `<img src="${esc(v.photo)}" alt="" loading="lazy" data-e="${EMOJI[it.cat]}">` : `<span>${EMOJI[it.cat]}</span>`;
+}
+function rowHTML(it) {
+  const v = view(it.id), d = discOf(v.price, v.mrp);
+  return `<article class="row ${edits[it.id] ? "dirty" : ""} ${v.stock ? "" : "out"}" data-id="${it.id}">
+    <label class="ph" title="Change photo"><input type="file" accept="image/*" data-up hidden><div data-photo style="display:contents">${photoHTML(it.id, it)}</div><span class="cam">📷</span></label>
+    <div class="mid"><b>${esc(it.name)}</b><small>PLU ${it.id} · ${PER[it.unit] || ""}</small>
+      <div class="tg"><label class="sw"><input type="checkbox" data-stock ${v.stock ? "checked" : ""}> ${v.stock ? "In stock" : "Sold out"}</label>
+      <button class="lnk" data-rm ${v.photo ? "" : "hidden"}>Remove photo</button></div></div>
+    <div class="nums">
+      <label>MRP ₹<input data-f="mrp" inputmode="decimal" value="${fmt(v.mrp)}" placeholder="—"></label>
+      <label>Discount %<input data-f="disc" inputmode="decimal" value="${fmt(d)}" placeholder="—"></label>
+      <label>Price ₹<input data-f="price" inputmode="decimal" value="${fmt(v.price)}" placeholder="At store"></label>
+    </div>
+    <div class="warn" data-warn ${v.mrp != null && v.price != null && v.price > v.mrp ? "" : "hidden"}>Price is above MRP, so no discount will show.</div>
+  </article>`;
+}
+function matches(it) {
+  const q = $("#q").value.trim().toLowerCase(), c = $("#cat").value, v = view(it.id);
+  if (c !== "all" && it.cat !== c) return false;
+  if (q && !(it.name.toLowerCase().includes(q) || (it.kn || "").includes(q) || String(it.id) === q)) return false;
+  if (filter === "noprice") return v.price == null;
+  if (filter === "nophoto") return !v.photo;
+  if (filter === "out") return !v.stock;
+  if (filter === "changed") return !!edits[it.id];
+  return true;
+}
+function renderList() {
+  const list = items().filter(matches).sort((a, b) => a.name.localeCompare(b.name));
+  $("#count").textContent = `${list.length} of ${items().length} items`;
+  $("#list").innerHTML = list.length ? list.map(rowHTML).join("") : `<div class="empty"><b>Nothing here</b><br>Try another search or filter.</div>`;
+}
+function renderChips() {
+  const n = items();
+  const c = { all: n.length, noprice: n.filter(i => view(i.id).price == null).length, nophoto: n.filter(i => !view(i.id).photo).length, out: n.filter(i => !view(i.id).stock).length, changed: Object.keys(edits).length };
+  const L = { all: "All", noprice: "No price", nophoto: "No photo", out: "Sold out", changed: "Changed" };
+  $("#chips").innerHTML = Object.keys(L).map(k => `<button class="chip" data-filter="${k}" aria-pressed="${k === filter}">${L[k]} ${c[k]}</button>`).join("");
+}
+function renderBar() {
+  const n = Object.keys(edits).length;
+  $("#savebar").classList.toggle("show", n > 0);
+  $("#chg").textContent = `${n} item${n === 1 ? "" : "s"} changed`;
+  $("#save").disabled = invalid.size > 0 || saving;
+  $("#chgNote").textContent = invalid.size ? "Fix the red fields to save" : "Live about a minute after saving";
+  renderChips();
+}
+function renderMeta() {
+  const u = remote.data.updated ? new Date(remote.data.updated) : null;
+  $("#meta").textContent = `${cfg.owner}/${cfg.repo}` + (u && !isNaN(u) && u.getFullYear() > 2025 ? " · saved " + u.toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "");
+}
+
+/* ---------------- Editing ---------------- */
+function parseNum(s) {
+  s = s.trim(); if (s === "") return { v: null };
+  const n = Number(s); return (isFinite(n) && n >= 0 && n <= 100000) ? { v: n } : { bad: true };
+}
+const rowOf = el => el.closest(".row");
+function refreshRow(row, skip) {
+  const id = +row.dataset.id, v = view(id), d = discOf(v.price, v.mrp);
+  const set = (f, val) => { const i = row.querySelector(`[data-f=${f}]`); if (i !== skip) { i.value = fmt(val); i.classList.remove("bad"); } };
+  set("mrp", v.mrp); set("price", v.price); set("disc", d);
+  row.classList.toggle("dirty", !!edits[id]); row.classList.toggle("out", !v.stock);
+  row.querySelector("[data-warn]").hidden = !(v.mrp != null && v.price != null && v.price > v.mrp);
+}
+$("#list").addEventListener("focusin", e => {
+  if (e.target.dataset.f === "disc") { const id = +rowOf(e.target).dataset.id, v = view(id); discBase[id] = { price: v.price, mrp: v.mrp }; }
+});
+$("#list").addEventListener("input", e => {
+  const el = e.target, f = el.dataset.f; if (!f) return;
+  const row = rowOf(el), id = +row.dataset.id, key = id + f;
+  const r = parseNum(el.value);
+  if (r.bad) { invalid.add(key); el.classList.add("bad"); return renderBar(); }
+  invalid.delete(key); el.classList.remove("bad");
+  if (f === "price") setEdit(id, { price: r.v });
+  else if (f === "mrp") setEdit(id, { mrp: r.v });
+  else {                                   // discount: always computed from the values at focus time
+    const b = discBase[id] || view(id), d = r.v;
+    if (d == null || d === 0) setEdit(id, { mrp: null, price: b.price });
+    else if (d >= 95) { invalid.add(key); el.classList.add("bad"); return renderBar(); }
+    else if (b.mrp != null) setEdit(id, { mrp: b.mrp, price: Math.round(b.mrp * (1 - d / 100)) });
+    else if (b.price != null) setEdit(id, { price: b.price, mrp: Math.round(b.price / (1 - d / 100)) });
+    else { invalid.add(key); el.classList.add("bad"); toast("Enter a price or MRP first.", true); return renderBar(); }
+  }
+  refreshRow(row, el); renderBar();
+});
+$("#list").addEventListener("change", async e => {
+  const el = e.target, row = rowOf(el); if (!row) return;
+  const id = +row.dataset.id;
+  if (el.matches("[data-stock]")) {
+    setEdit(id, { stock: el.checked });
+    el.parentElement.lastChild.textContent = el.checked ? " In stock" : " Sold out";
+    refreshRow(row); renderBar();
+  } else if (el.matches("[data-up]")) {
+    const file = el.files[0]; el.value = ""; if (!file) return;
+    if (file.size > 30e6) return toast("That photo is too large. Pick one under 30 MB.", true);
+    try {
+      const dataUrl = await compress(file);
+      setEdit(id, { photo: dataUrl }); preview[id] = dataUrl;
+      row.querySelector("[data-photo]").innerHTML = photoHTML(id, find(id));
+      row.querySelector("[data-rm]").hidden = false; refreshRow(row); renderBar();
+    } catch (err) { toast("Couldn't read that photo. Use a JPG or PNG.", true); }
+  }
+});
+$("#list").addEventListener("click", e => {
+  const b = e.target.closest("[data-rm]"); if (!b) return;
+  e.preventDefault();
+  const row = rowOf(b), id = +row.dataset.id; delete preview[id];
+  setEdit(id, { photo: null });
+  row.querySelector("[data-photo]").innerHTML = `<span>${EMOJI[find(id).cat]}</span>`;
+  b.hidden = true; refreshRow(row); renderBar();
+});
+$("#list").addEventListener("error", e => {
+  const i = e.target; if (i.tagName !== "IMG") return;
+  const s = document.createElement("span"); s.textContent = i.dataset.e || "🥬"; i.replaceWith(s);
+}, true);
+
+async function compress(file) {
+  let bmp;
+  try { bmp = await createImageBitmap(file, { imageOrientation: "from-image" }); }
+  catch (e) { bmp = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(file); }); }
+  const W = 640, H = 480, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, W, H);
+  const sw = bmp.width || bmp.naturalWidth, sh = bmp.height || bmp.naturalHeight, s = Math.max(W / sw, H / sh);
+  x.drawImage(bmp, (W - sw * s) / 2, (H - sh * s) / 2, sw * s, sh * s);
+  return c.toDataURL("image/jpeg", 0.82);
+}
+
+/* ---------------- Save ---------------- */
+let saving = false;
+async function saveAll() {
+  const ids = Object.keys(edits).map(Number); if (!ids.length || invalid.size || saving) return;
+  saving = true; $("#save").textContent = "Saving…"; renderBar();
+  try {
+    const ver = Date.now(), pending = ids.filter(id => typeof edits[id].photo === "string");
+    for (let k = 0; k < pending.length; k++) {
+      $("#save").textContent = `Uploading photo ${k + 1}/${pending.length}…`;
+      await putImage(`images/${pending[k]}.jpg`, edits[pending[k]].photo.split(",")[1], `Photo for PLU ${pending[k]}`);
+    }
+    $("#save").textContent = "Saving…";
+    for (let attempt = 0; ; attempt++) {
+      const cur = await getJSON();           // always edit the latest copy, so nothing is overwritten
+      for (const id of ids) {
+        const it = cur.data.items.find(i => i.id === id), e = edits[id]; if (!it) continue;
+        if ("price" in e) it.price = e.price;
+        if ("mrp" in e) it.mrp = e.mrp;
+        if ("stock" in e) it.stock = e.stock;
+        if (typeof e.photo === "string") it.img = `images/${id}.jpg?v=${ver}`; else if (e.photo === null) it.img = null;
+      }
+      cur.data.updated = new Date().toISOString();
+      try {
+        const res = await putFile("products.json", b64enc(serialize(cur.data)), `Update catalogue (${ids.length} item${ids.length > 1 ? "s" : ""})`, cur.sha);
+        remote = { sha: res.content.sha, data: cur.data }; break;
+      } catch (e) { if (attempt >= 2 || (e.status !== 409 && e.status !== 422)) throw e; }
+    }
+    for (const k of Object.keys(edits)) delete edits[k];
+    invalid.clear();
+    toast("Saved. The store updates in about a minute.");
+    renderMeta(); renderList();
+  } catch (e) { toast(explain(e), true); }
+  saving = false; $("#save").textContent = "Save"; renderBar();
+}
+$("#save").onclick = saveAll;
+$("#discard").onclick = () => {
+  if (!confirm("Discard all unsaved changes?")) return;
+  for (const k of Object.keys(edits)) { delete edits[k]; delete preview[k]; }
+  invalid.clear(); renderList(); renderBar();
+};
+addEventListener("beforeunload", e => { if (Object.keys(edits).length) { e.preventDefault(); e.returnValue = ""; } });
+
+/* ---------------- Filters ---------------- */
+let qT; $("#q").addEventListener("input", () => { clearTimeout(qT); qT = setTimeout(renderList, 120); });
+$("#cat").addEventListener("change", renderList);
+$("#chips").addEventListener("click", e => { const b = e.target.closest("[data-filter]"); if (b) { filter = b.dataset.filter; renderList(); renderChips(); } });
+
+/* ---------------- Sign in / out ---------------- */
+function showSetup(msg) {
+  $("#app").hidden = true; $("#setup").hidden = false; $("#setupMsg").textContent = msg || "";
+  const c = cfg || {}, h = location.hostname;
+  $("#cOwner").value = c.owner || (h.endsWith(".github.io") ? h.split(".")[0] : "");
+  const seg = location.pathname.split("/")[1];
+  $("#cRepo").value = c.repo || (h.endsWith(".github.io") ? (seg && !seg.includes(".") ? seg : h) : "");
+  $("#cBranch").value = c.branch || "main";
+}
+async function enter() {
+  const meta = await gh(""), perms = meta.permissions;
+  if (perms && perms.push === false) throw Object.assign(new Error("perm"), { status: 403 });
+  remote = await getJSON();
+  $("#setup").hidden = true; $("#app").hidden = false;
+  renderMeta(); renderList(); renderBar();
+}
+$("#setupForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  cfg = { owner: $("#cOwner").value.trim(), repo: $("#cRepo").value.trim(), branch: $("#cBranch").value.trim() || "main", token: $("#cToken").value.trim() };
+  const btn = $("#connectBtn"); btn.disabled = true; btn.textContent = "Connecting…"; $("#setupMsg").textContent = "";
+  try {
+    await enter();
+    const s = JSON.stringify(cfg);
+    try { localStorage.removeItem("mg_admin"); sessionStorage.removeItem("mg_admin"); ($("#cRemember").checked ? localStorage : sessionStorage).setItem("mg_admin", s); } catch (x) {}
+    $("#cToken").value = "";
+  } catch (err) { $("#setupMsg").textContent = explain(err); }
+  btn.disabled = false; btn.textContent = "Connect";
+});
+$("#signOut").onclick = () => {
+  if (Object.keys(edits).length && !confirm("You have unsaved changes. Sign out anyway?")) return;
+  try { localStorage.removeItem("mg_admin"); sessionStorage.removeItem("mg_admin"); } catch (e) {}
+  for (const k of Object.keys(edits)) delete edits[k];
+  cfg = null; remote = null; showSetup();
+};
+(async () => {
+  cfg = loadCfg();
+  if (!cfg) return showSetup();
+  try { await enter(); } catch (err) { showSetup(explain(err)); }
+})();
+</script>
+</body>
+</html>
