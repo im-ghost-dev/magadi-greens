@@ -15,9 +15,13 @@ const spring = { type: "spring" as const, stiffness: 400, damping: 25 };
 export const ProductCard = React.memo(function ProductCard({
   product: p,
   index,
+  isHighlighted = false,
+  onHighlightEnd,
 }: {
   product: Product;
   index: number;
+  isHighlighted?: boolean;
+  onHighlightEnd?: () => void;
 }) {
   const { add, qtyOf, setQty } = useCart();
   const imgRef = useRef<HTMLDivElement>(null);
@@ -27,6 +31,8 @@ export const ProductCard = React.memo(function ProductCard({
 
   return (
     <motion.article
+      id={`product-card-${p.id}`}
+      onAnimationEnd={onHighlightEnd}
       whileHover={out ? {} : { y: -4, scale: 1.015, transition: spring }}
       whileTap={out ? {} : { scale: 0.98 }}
       style={{ contentVisibility: "auto", containIntrinsicSize: "280px" }}
@@ -34,6 +40,7 @@ export const ProductCard = React.memo(function ProductCard({
         "card-intrinsic group flex flex-col rounded-2xl border border-border/70 bg-card shadow-card transition-shadow duration-200",
         !out && "elevate-hover",
         out && "opacity-60 grayscale",
+        isHighlighted && "animate-target-card-glow z-20 relative ring-2 ring-primary",
       )}
     >
       <div className="relative overflow-hidden rounded-t-2xl">

@@ -61,6 +61,7 @@ async function main() {
     await db.special.createMany({
       data: [
         {
+          productId: 109,
           title: "Alphonso Mango",
           priceText: "₹280 / kg",
           label: "Fresh today",
@@ -68,6 +69,7 @@ async function main() {
           sort: 0,
         },
         {
+          productId: 3,
           title: "Country Tomatoes",
           priceText: "₹35 / kg",
           label: "Fresh today",
@@ -75,6 +77,7 @@ async function main() {
           sort: 1,
         },
         {
+          productId: 43,
           title: "Farm Spinach Bunch",
           priceText: "₹20 / bunch",
           label: "Just harvested",

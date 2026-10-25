@@ -29,6 +29,7 @@ export function Storefront() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [view, setView] = useState<"store" | "admin">("store");
   const [adminAuthed, setAdminAuthed] = useState(false);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const scrolled = useScrolled(360);
 
   function loadData() {
@@ -41,6 +42,84 @@ export function Storefront() {
   useEffect(() => {
     loadData();
   }, []);
+
+  function handleSelectSpecial(special: Special) {
+    if (!products || products.length === 0) return;
+
+    // 1. Match product by productId or normalized words
+    let target = special.productId
+      ? products.find((p) => String(p.id) === String(special.productId))
+      : null;
+
+    if (!target) {
+      const sWords = special.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((w) => w.length > 2)
+        .map((w) => (w.endsWith("es") ? w.slice(0, -2) : w.endsWith("s") ? w.slice(0, -1) : w));
+
+      let bestProduct: Product | null = null;
+      let maxScore = 0;
+      for (const p of products) {
+        const pWords = p.name
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, " ")
+          .split(/\s+/)
+          .filter((w) => w.length > 2)
+          .map((w) => (w.endsWith("es") ? w.slice(0, -2) : w.endsWith("s") ? w.slice(0, -1) : w));
+
+        let score = 0;
+        for (const sw of sWords) {
+          if (pWords.some((pw) => pw === sw || pw.includes(sw) || sw.includes(pw))) {
+            score++;
+          }
+        }
+        if (score > maxScore) {
+          maxScore = score;
+          bestProduct = p;
+        }
+      }
+      target = bestProduct;
+    }
+
+    if (!target) return;
+
+    const targetId = target.id;
+
+    // 2. Auto-reset filters if item is hidden
+    let resetNeeded = false;
+    if (query) {
+      setQuery("");
+      resetNeeded = true;
+    }
+    if (inStockOnly && !target.inStock) {
+      setInStockOnly(false);
+      resetNeeded = true;
+    }
+    if (cat !== "All" && target.category !== cat) {
+      setCat("All");
+      resetNeeded = true;
+    }
+
+    // 3. Smooth scroll and 2x glow highlight
+    function triggerScrollAndGlow() {
+      const el = document.getElementById(`product-card-${targetId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setHighlightedId(targetId);
+        setTimeout(() => {
+          setHighlightedId((curr) => (curr === targetId ? null : curr));
+        }, 1050);
+      }
+    }
+
+    if (resetNeeded) {
+      setTimeout(triggerScrollAndGlow, 80);
+    } else {
+      requestAnimationFrame(triggerScrollAndGlow);
+    }
+  }
 
   const searched = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -90,7 +169,12 @@ export function Storefront() {
         transition={{ duration: 0.3 }}
       >
         {!query && <Hero settings={settings} />}
-        {!query && <SpecialsCarousel specials={specials} />}
+        {!query && (
+          <SpecialsCarousel
+            specials={specials}
+            onSelectSpecial={handleSelectSpecial}
+          />
+        )}
 
         <div
           className={cn(
@@ -146,7 +230,15 @@ export function Storefront() {
               className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 will-change-[transform,opacity]"
             >
               {visible.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} />
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  index={i}
+                  isHighlighted={highlightedId === p.id}
+                  onHighlightEnd={() =>
+                    setHighlightedId((curr) => (curr === p.id ? null : curr))
+                  }
+                />
               ))}
             </motion.div>
           )}

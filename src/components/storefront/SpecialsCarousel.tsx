@@ -7,7 +7,13 @@ import type { Special } from "@/types";
 import { ProductImage } from "./ProductImage";
 
 /** Swipeable, snap-scrolling "Today's Special" strip with parallax and an enlarged active card. Hidden when empty. */
-export function SpecialsCarousel({ specials }: { specials: Special[] }) {
+export function SpecialsCarousel({
+  specials,
+  onSelectSpecial,
+}: {
+  specials: Special[];
+  onSelectSpecial?: (special: Special) => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [scroll, setScroll] = useState(0);
   const [active, setActive] = useState(0);
@@ -59,6 +65,8 @@ export function SpecialsCarousel({ specials }: { specials: Special[] }) {
           return (
             <motion.article
               key={s.id}
+              onClick={() => onSelectSpecial?.(s)}
+              whileTap={{ scale: 0.98 }}
               initial={{ opacity: 0, x: reduce ? 0 : 24 }}
               animate={{ opacity: 1, x: 0, scale: isActive || reduce ? 1 : 0.95 }}
               transition={{
@@ -67,7 +75,7 @@ export function SpecialsCarousel({ specials }: { specials: Special[] }) {
                 damping: 26,
                 delay: reduce ? 0 : 0.15 + i * 0.05,
               }}
-              className="relative h-44 w-[82%] max-w-sm shrink-0 snap-start overflow-hidden rounded-2xl bg-primary-deep shadow-elev-md sm:h-52"
+              className="relative h-44 w-[82%] max-w-sm shrink-0 snap-start overflow-hidden rounded-2xl bg-primary-deep shadow-elev-md sm:h-52 cursor-pointer active:scale-[0.98] transition-transform select-none"
             >
               <div
                 className="absolute inset-y-0 -left-8 -right-8 will-change-transform"
