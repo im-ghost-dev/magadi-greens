@@ -177,6 +177,7 @@ export function Storefront() {
         )}
 
         <div
+          id="categories"
           className={cn(
             "sticky top-[106px] z-30 mt-4 border-b bg-background/85 backdrop-blur-md transition-[box-shadow,border-color] duration-300",
             scrolled ? "border-border/50 shadow-bar" : "border-transparent",
@@ -261,8 +262,8 @@ export function Storefront() {
 
       <FloatingCartBar
         title={settings?.shopName ?? "MAGADI GREENS"}
-        subtitle="View Menu"
-        subtitleHref="#menu"
+        subtitle="View more veggies"
+        subtitleHref="#categories"
       />
       <CartDrawer products={products} settings={settings} />
     </div>

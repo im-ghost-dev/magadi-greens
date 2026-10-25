@@ -10,9 +10,9 @@ export interface FloatingCartBarProps {
   itemCount?: number;
   /** Primary title (defaults to "MAGADI GREENS") */
   title?: string;
-  /** Subtitle link text (defaults to "View Menu") */
+  /** Subtitle link text (defaults to "View more veggies") */
   subtitle?: string;
-  /** Subtitle target anchor / href */
+  /** Subtitle target anchor / href (defaults to "#categories") */
   subtitleHref?: string;
   /** 48x48 Circular thumbnail image URL */
   thumbnail?: string;
@@ -24,22 +24,22 @@ export interface FloatingCartBarProps {
   className?: string;
 }
 
+// Fresh vegetables and fruits basket image for MAGADI GREENS
 const DEFAULT_THUMB =
-  "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=120&auto=format&fit=crop&q=80";
+  "https://images.unsplash.com/photo-1542838132-92c53300491e?w=150&auto=format&fit=crop&q=80";
 
 /**
  * Reusable floating bottom cart bar component fixed at bottom: 20px, z-index: 50.
  *
- * Visibility is purely reactive based on (totalCartItems > 0 && !isPickupDrawerOpen).
- * Clicking "×" completely empties the cart, causing the bar to animate out and
- * resetting all product cards to "+ Add". Adding any item immediately brings the
- * floating bar back into view without any stuck dismissed state.
+ * Displays fresh produce thumbnail, store branding, and "View more veggies ▸"
+ * which smoothly scrolls the customer to the category chips / catalogue.
+ * Clicking "×" empties the entire cart, reactively hiding the bar.
  */
 export function FloatingCartBar({
   itemCount,
   title = "MAGADI GREENS",
-  subtitle = "View Menu",
-  subtitleHref = "#menu",
+  subtitle = "View more veggies",
+  subtitleHref = "#categories",
   thumbnail,
   onViewCart,
   onDismiss,
@@ -49,7 +49,7 @@ export function FloatingCartBar({
   const effectiveCount = itemCount !== undefined ? itemCount : cart.count;
   const reduce = useReducedMotion();
 
-  // Derive thumbnail from the most recent cart item image, or prop, or default
+  // If the cart item has its own valid image, show it; otherwise use the fresh veggies/fruits image
   const latestCartImg = cart.lines[cart.lines.length - 1]?.image;
   const activeThumbnail = thumbnail || latestCartImg || DEFAULT_THUMB;
 
@@ -66,6 +66,15 @@ export function FloatingCartBar({
     // Clicking "×" completely empties the cart
     cart.clear();
     onDismiss?.();
+  }
+
+  function handleScrollToCategories(e: React.MouseEvent) {
+    e.preventDefault();
+    const targetId = subtitleHref.replace("#", "") || "categories";
+    const el = document.getElementById(targetId) || document.getElementById("menu");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }
 
   // Purely reactive visibility: visible whenever cart has items and drawer is closed
@@ -113,7 +122,7 @@ export function FloatingCartBar({
             {/* Left 48px x 48px Circular Thumbnail */}
             <img
               src={activeThumbnail}
-              alt={title}
+              alt="Fresh Vegetables and Fruits"
               width={48}
               height={48}
               style={{
@@ -129,7 +138,7 @@ export function FloatingCartBar({
               }}
             />
 
-            {/* Middle Text Stack with truncate so it never collides on mobile */}
+            {/* Middle Text Stack with tuned font sizes (14.5px / 12.5px) */}
             <div
               style={{
                 flex: 1,
@@ -142,24 +151,31 @@ export function FloatingCartBar({
             >
               <span
                 style={{
+                  fontSize: "14.5px",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
+                  fontWeight: 700,
+                  lineHeight: 1.2,
                 }}
-                className="block text-base font-bold leading-tight text-gray-900 dark:text-white"
+                className="block text-gray-900 dark:text-white"
               >
                 {title}
               </span>
               <a
                 href={subtitleHref}
+                onClick={handleScrollToCategories}
                 style={{
+                  fontSize: "12.5px",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
+                  fontWeight: 500,
+                  marginTop: "2px",
                 }}
-                className="mt-0.5 inline-flex items-center gap-1 text-[13.5px] font-medium text-gray-600 transition-opacity hover:opacity-80 dark:text-gray-300"
+                className="inline-flex items-center gap-1 text-gray-600 transition-opacity hover:opacity-80 dark:text-gray-300 cursor-pointer"
               >
-                {subtitle}
+                <span style={{ whiteSpace: "nowrap" }}>{subtitle}</span>
                 <span className="text-xs text-[#db545a]" aria-hidden>
                   &#9656;
                 </span>
