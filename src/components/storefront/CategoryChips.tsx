@@ -22,7 +22,7 @@ export function Chip({
       aria-pressed={active}
       whileTap={{ scale: 0.94 }}
       className={cn(
-        "relative flex h-10 shrink-0 flex-shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition-colors cursor-pointer select-none",
+        "relative flex h-[38px] shrink-0 flex-shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full border px-3.5 text-xs font-semibold transition-colors cursor-pointer select-none",
         active
           ? "border-primary text-primary-foreground"
           : "border-border bg-card text-foreground hover:bg-secondary",
@@ -73,7 +73,7 @@ export function CategoryChips<T extends string>({
           "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
       }}
       className={cn(
-        "no-scrollbar mask-edge-fade flex gap-[10px] overflow-x-auto py-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "no-scrollbar mask-edge-fade flex gap-[10px] overflow-x-auto py-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >
