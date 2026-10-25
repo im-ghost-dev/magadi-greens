@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Leaf } from "lucide-react";
+import { getProductImageUrl } from "@/lib/product-images";
 
 type Props = {
   src: string | null | undefined;
@@ -13,24 +14,19 @@ type Props = {
 };
 
 /**
- * Product image with a clean, neutral placeholder.
- *
- * Previously the app showed emojis guessed from the product name, which were
- * often wrong (e.g. Amla → broccoli, Anjeer → apple). We now show a tasteful
- * neutral leaf placeholder on a soft green background whenever there's no photo
- * (or the photo fails to load), and the real photo once one is uploaded.
+ * Product image with tailored real image resolver and graceful leaf fallback.
  */
 export function ProductThumb({ src, alt, className = "", big = false }: Props) {
   const [failed, setFailed] = useState(false);
-  const showImg = src && !failed;
+  const effectiveSrc = !failed ? (src || getProductImageUrl(alt)) : null;
 
   return (
     <div
       className={`relative grid place-items-center overflow-hidden bg-gradient-to-br from-g50 to-g100 ${className}`}
     >
-      {showImg ? (
+      {effectiveSrc ? (
         <img
-          src={src as string}
+          src={effectiveSrc}
           alt={alt}
           loading="lazy"
           decoding="async"

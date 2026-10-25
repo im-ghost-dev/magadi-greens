@@ -4,6 +4,7 @@
  */
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
+import { getProductImageUrl } from "@/lib/product-images";
 
 export const CATEGORIES = ["v", "l", "f", "m", "x", "o"] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -71,8 +72,8 @@ export function toProduct(row: {
     mrp: row.mrp,
     kn: row.kn,
     stock: row.stock,
-    // img is now a full Supabase Storage public URL (or null). Pass it through.
-    img: row.img ?? null,
+    // img is a full Storage URL or realistic Unsplash URL tailored to the product
+    img: row.img || getProductImageUrl(row.name, row.cat),
     updatedAt: row.updatedAt.toISOString(),
   };
 }

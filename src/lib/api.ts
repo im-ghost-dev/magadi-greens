@@ -8,6 +8,7 @@ import {
   CODE_TO_CAT,
 } from "@/types";
 import { compressToWebp } from "./image-compress";
+import { getProductImageUrl } from "./product-images";
 
 /* ------------------------------- Products ------------------------------- */
 
@@ -43,7 +44,7 @@ function mapProduct(p: RawProduct): Product {
     discount,
     price,
     inStock: p.stock !== false,
-    image: p.img ?? null,
+    image: p.img || getProductImageUrl(p.name, p.cat),
   };
 }
 
