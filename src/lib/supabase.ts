@@ -12,6 +12,8 @@
  *   SUPABASE_BUCKET              – optional, defaults to "product-photos"
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import fs from "fs/promises";
+import path from "path";
 
 export const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || "product-photos";
 
@@ -31,7 +33,8 @@ export function supabaseAdmin(): SupabaseClient | null {
 
 /**
  * Uploads image bytes to Storage and returns the public URL (cache-busted).
- * `key` is the object path inside the bucket, e.g. "products/3.webp".
+ * If Supabase is configured, uploads to Supabase Storage bucket.
+ * Otherwise, falls back to local disk storage in /public/uploads/ for local dev.
  */
 export async function uploadPublic(
   key: string,
@@ -39,24 +42,39 @@ export async function uploadPublic(
   contentType: string,
 ): Promise<string> {
   const sb = supabaseAdmin();
-  if (!sb) throw new Error("Supabase Storage is not configured on the server.");
+  if (sb) {
+    const { error } = await sb.storage.from(SUPABASE_BUCKET).upload(key, bytes, {
+      contentType,
+      upsert: true, // replace the previous photo for this item
+      cacheControl: "31536000", // 1 year; we cache-bust with ?v=
+    });
+    if (error) throw new Error(error.message);
 
-  const { error } = await sb.storage.from(SUPABASE_BUCKET).upload(key, bytes, {
-    contentType,
-    upsert: true, // replace the previous photo for this item
-    cacheControl: "31536000", // 1 year; we cache-bust with ?v=
-  });
-  if (error) throw new Error(error.message);
+    const { data } = sb.storage.from(SUPABASE_BUCKET).getPublicUrl(key);
+    return `${data.publicUrl}?v=${Date.now()}`;
+  }
 
-  const { data } = sb.storage.from(SUPABASE_BUCKET).getPublicUrl(key);
-  return `${data.publicUrl}?v=${Date.now()}`;
+  // Local fallback: save to /public/uploads/
+  const filePath = path.join(process.cwd(), "public", "uploads", key);
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.writeFile(filePath, bytes);
+  return `/uploads/${key}?v=${Date.now()}`;
 }
 
-/** Removes an object from Storage. Safe to call even if it doesn't exist. */
+/** Removes an object from Storage or local fallback. Safe to call even if it doesn't exist. */
 export async function removePublic(key: string): Promise<void> {
   const sb = supabaseAdmin();
-  if (!sb) return;
-  await sb.storage.from(SUPABASE_BUCKET).remove([key]);
+  if (sb) {
+    await sb.storage.from(SUPABASE_BUCKET).remove([key]);
+    return;
+  }
+
+  try {
+    const filePath = path.join(process.cwd(), "public", "uploads", key);
+    await fs.unlink(filePath);
+  } catch {
+    /* ignore */
+  }
 }
 
 /** Object path for a product photo. */

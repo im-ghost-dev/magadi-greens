@@ -1,0 +1,74 @@
+// Prisma schema for SQLite (Local offline development)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// A single fruit / vegetable / egg SKU in the MAGADI GREENS catalogue.
+model Product {
+  /// PLU number, also used as the public id on the storefront.
+  id        Int       @id
+  name      String
+  /// Category code: v (vegetables), l (leafy), f (fruits), m (mangoes), x (exotic), o (eggs & more).
+  cat       String
+  /// Selling unit: kg, pc, bunch, pkt.
+  unit      String
+  /// Sale price in INR. null means "price at store" (weighed at counter).
+  price     Float?
+  /// Maximum retail price. null means no discount badge.
+  mrp       Float?
+  /// Kannada name (displayed under the English name).
+  kn        String    @default("")
+  /// In stock today.
+  stock     Boolean   @default(true)
+  /// Full Supabase Storage URL or relative image path. null = neutral leaf placeholder.
+  img       String?
+  updatedAt DateTime  @updatedAt
+  createdAt DateTime  @default(now())
+
+  @@index([cat])
+  @@index([stock])
+}
+
+/// Admin sessions (lightweight, single shared password approach).
+model AdminSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+/// Editable shop/contact info. A single row (id = 1) holds everything the
+/// shopkeeper can change: name, phone, WhatsApp number (where orders go),
+/// address, opening hours, Google Maps link and tagline.
+model Settings {
+  id         Int      @id @default(1)
+  shopName   String   @default("MAGADI GREENS")
+  tagline    String   @default("Farm fresh · Self pick-up")
+  phone      String   @default("+91 91481 12233")
+  /// Destination WhatsApp number for orders. Digits only, incl. country code.
+  whatsapp   String   @default("919148112233")
+  address    String   @default("No. 24, 20th Main Rd, Ittamadu, AGS Layout, Hosakerehalli, Bengaluru 560061")
+  hours      String   @default("Daily 6:30 AM – 9:30 PM")
+  mapsUrl    String   @default("https://maps.app.goo.gl/QN1YNYLwVPgDgvW86")
+  updatedAt  DateTime @updatedAt
+}
+
+/// Today's Special carousel slots. 1 to 6 slots maximum.
+model Special {
+  id        String   @id @default(cuid())
+  productId Int?
+  title     String
+  priceText String?
+  label     String?
+  img       String
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sort])
+}

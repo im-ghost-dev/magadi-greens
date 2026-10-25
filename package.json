@@ -12,6 +12,8 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset",
+    "db:use-sqlite": "cp prisma/schema.sqlite.prisma prisma/schema.prisma && prisma generate",
+    "db:use-postgres": "cp prisma/schema.postgres.prisma prisma/schema.prisma && prisma generate",
     "postinstall": "prisma generate"
   },
   "prisma": {

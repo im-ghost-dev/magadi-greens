@@ -9,7 +9,10 @@
  * /api/photos serving path any more.
  */
 
-/** True if `url` looks like a Supabase public Storage URL (http/https). */
+/** True if `url` looks like a Supabase public Storage URL or local upload URL. */
 export function isStoredPhotoUrl(url: string): boolean {
-  return /^https?:\/\/.+\/storage\/v1\/object\/public\/.+/i.test(url);
+  return (
+    /^https?:\/\/.+\/storage\/v1\/object\/public\/.+/i.test(url) ||
+    url.startsWith("/uploads/")
+  );
 }
