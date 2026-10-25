@@ -22,7 +22,7 @@ export function Chip({
       aria-pressed={active}
       whileTap={{ scale: 0.94 }}
       className={cn(
-        "relative flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition-colors cursor-pointer",
+        "relative flex h-10 shrink-0 flex-shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition-colors cursor-pointer select-none",
         active
           ? "border-primary text-primary-foreground"
           : "border-border bg-card text-foreground hover:bg-secondary",
@@ -36,7 +36,7 @@ export function Chip({
           transition={{ type: "spring", stiffness: 420, damping: 34 }}
         />
       )}
-      <span className="relative z-10 flex items-center gap-1.5">{children}</span>
+      <span className="relative z-10 flex shrink-0 whitespace-nowrap items-center gap-1.5">{children}</span>
     </motion.button>
   );
 }
@@ -60,7 +60,23 @@ export function CategoryChips<T extends string>({
 }) {
   const pill = useId();
   return (
-    <div className={cn("no-scrollbar flex gap-2 overflow-x-auto py-2", className)}>
+    <div
+      style={{
+        display: "flex",
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
+        scrollbarWidth: "none",
+        gap: "10px",
+        maskImage:
+          "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
+      }}
+      className={cn(
+        "no-scrollbar mask-edge-fade flex gap-[10px] overflow-x-auto py-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        className,
+      )}
+    >
       {options.map((o) => (
         <Chip
           key={o}
@@ -71,7 +87,7 @@ export function CategoryChips<T extends string>({
           {o}
           <span
             className={cn(
-              "text-xs",
+              "text-xs shrink-0 whitespace-nowrap",
               value === o ? "opacity-80" : "text-muted-foreground",
             )}
           >
@@ -79,7 +95,7 @@ export function CategoryChips<T extends string>({
           </span>
         </Chip>
       ))}
-      <span className="mx-1 w-px shrink-0 bg-border" />
+      <span className="mx-1 w-px shrink-0 flex-shrink-0 bg-border" />
       <Chip active={inStockOnly} onClick={() => onInStock(!inStockOnly)}>
         In stock
       </Chip>

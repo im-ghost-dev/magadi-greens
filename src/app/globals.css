@@ -65,7 +65,7 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #ffffff;
+  --background: #f8fafc;
   --foreground: #18241a;
   --cream: #f8fafc;
   --card: #ffffff;
@@ -103,7 +103,7 @@
 }
 
 .dark {
-  --background: #11161b;
+  --background: #0f1512;
   --foreground: #f9fafb;
   --cream: #18221d;
   --card: #18221d;
@@ -161,9 +161,15 @@
 
 @utility no-scrollbar {
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+@utility mask-edge-fade {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%);
 }
 
 @utility bg-sheen {

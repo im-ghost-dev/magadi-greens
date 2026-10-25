@@ -274,6 +274,7 @@ export function Storefront() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
+        className="bg-transparent"
       >
         {!query && <Hero settings={settings} />}
         {!query && (
@@ -286,8 +287,10 @@ export function Storefront() {
         <div
           id="categories"
           className={cn(
-            "sticky top-[106px] z-30 mt-4 border-b bg-background/85 backdrop-blur-md transition-[box-shadow,border-color] duration-300",
-            scrolled ? "border-border/50 shadow-bar" : "border-transparent",
+            "sticky top-[106px] z-30 mt-4 border-b transition-[box-shadow,border-color,background-color] duration-300",
+            scrolled
+              ? "border-border/40 bg-background/60 backdrop-blur-md shadow-bar"
+              : "border-transparent bg-transparent",
           )}
         >
           <CategoryChips
@@ -301,7 +304,7 @@ export function Storefront() {
           />
         </div>
 
-        <section id="menu" className="mx-auto max-w-6xl px-4 py-4 pb-28" aria-label="Products">
+        <section id="menu" className="mx-auto max-w-6xl px-4 py-4 pb-28 bg-transparent" aria-label="Products">
           {products === null ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4">
               {Array.from({ length: 8 }).map((_, i) => (

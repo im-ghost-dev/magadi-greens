@@ -55,7 +55,18 @@ export function SpecialsCarousel({
       <div
         ref={ref}
         onScroll={onScroll}
-        className="no-scrollbar mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-4 pb-4 pt-1"
+        style={{
+          display: "flex",
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
+          gap: "10px",
+          maskImage:
+            "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
+        }}
+        className="no-scrollbar mask-edge-fade mt-3 flex snap-x snap-mandatory gap-[10px] overflow-x-auto overscroll-x-contain px-4 pb-4 pt-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {specials.map((s, i) => {
           const offset = i * cardWidth - scroll;
@@ -75,7 +86,7 @@ export function SpecialsCarousel({
                 damping: 26,
                 delay: reduce ? 0 : 0.15 + i * 0.05,
               }}
-              className="relative h-44 w-[82%] max-w-sm shrink-0 snap-start overflow-hidden rounded-2xl bg-primary-deep shadow-elev-md sm:h-52 cursor-pointer active:scale-[0.98] transition-transform select-none"
+              className="relative h-44 w-[82%] max-w-sm shrink-0 flex-shrink-0 snap-start overflow-hidden rounded-2xl bg-primary-deep shadow-elev-md sm:h-52 cursor-pointer active:scale-[0.98] transition-transform select-none whitespace-nowrap"
             >
               <div
                 className="absolute inset-y-0 -left-8 -right-8 will-change-transform"
@@ -86,15 +97,15 @@ export function SpecialsCarousel({
               <div className="absolute inset-0 bg-gradient-to-t from-primary-deep/90 via-primary-deep/30 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4">
                 <div className="min-w-0">
-                  <span className="rounded-full bg-sale px-2.5 py-0.5 text-[11px] font-semibold text-sale-foreground">
+                  <span className="rounded-full bg-sale px-2.5 py-0.5 text-[11px] font-semibold text-sale-foreground whitespace-nowrap">
                     {s.label || "Fresh today"}
                   </span>
-                  <h3 className="mt-1.5 truncate text-lg font-semibold text-primary-foreground">
+                  <h3 className="mt-1.5 truncate text-lg font-semibold text-primary-foreground whitespace-nowrap">
                     {s.title}
                   </h3>
                 </div>
                 {priceDisplay && (
-                  <span className="shrink-0 rounded-xl bg-card px-3 py-1.5 text-lg font-bold text-primary-deep shadow-card">
+                  <span className="shrink-0 flex-shrink-0 whitespace-nowrap rounded-xl bg-card px-3 py-1.5 text-lg font-bold text-primary-deep shadow-card">
                     {priceDisplay}
                   </span>
                 )}

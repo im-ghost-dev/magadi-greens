@@ -43,8 +43,19 @@ export function TodaysSpecial({ products }: Props) {
       </div>
 
       <div
-        className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1"
-        style={{ scrollPadding: "1rem" }}
+        style={{
+          scrollPadding: "1rem",
+          display: "flex",
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
+          gap: "12px",
+          maskImage:
+            "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
+        }}
+        className="no-scrollbar mask-edge-fade -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1"
       >
         {specials.map((s, i) => {
           const v = resolve(s, byId);

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface AmbientBackgroundProps {
@@ -9,63 +9,144 @@ interface AmbientBackgroundProps {
 }
 
 /**
- * Responsive full-screen ambient mesh background container supporting both
- * light and dark themes, inspired by modern Web3 platforms like OpenSea.
+ * Responsive full-height ambient mesh background supporting both light and dark modes.
  *
- * Dark Mode:
- *  - Base background: Deep charcoal / near-black (#11161B).
- *  - Top-left: Muted teal / cyan ambient glow (#0891b2 / #164e63 with blur-3xl).
- *  - Top-right: Muted indigo / violet ambient glow (#4c1d95 / #581c87 with blur-3xl).
- *  - Fades smoothly into the dark base before reaching the lower half.
- *
- * Light Mode:
- *  - Base background: Pure white (#ffffff).
- *  - Top-left: Soft pastel sky blue (#bae6fd / #7dd3fc with 35% opacity, blur-3xl).
- *  - Top-right: Soft pastel lavender / mauve (#fbcfe8 / #e9d5ff with 35% opacity, blur-3xl).
- *  - Washes out seamlessly into pure white downward.
+ * Requirements:
+ *  - Base background color:
+ *      Light: #f8fafc
+ *      Dark:  #0f1512
+ *  - Layer: absolute inset-0 pointer-events-none z-0 overflow-hidden (min-height: 100%)
+ *  - Top-Left Glow:
+ *      Light: radial-gradient(circle, rgba(125, 211, 252, 0.45) 0%, transparent 70%)
+ *      Dark:  radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, transparent 70%)
+ *  - Top-Right Glow:
+ *      Light: radial-gradient(circle, rgba(233, 213, 255, 0.45) 0%, transparent 70%)
+ *      Dark:  radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 70%)
+ *  - Mid Glow (top: 35%, left):
+ *      Light: radial-gradient(circle, rgba(125, 211, 252, 0.35) 0%, transparent 70%)
+ *      Dark:  radial-gradient(circle, rgba(16, 185, 129, 0.16) 0%, transparent 70%)
+ *  - Lower Glow (top: 70%, right):
+ *      Light: radial-gradient(circle, rgba(233, 213, 255, 0.35) 0%, transparent 70%)
+ *      Dark:  radial-gradient(circle, rgba(99, 102, 241, 0.14) 0%, transparent 70%)
+ *  - Parallax Shift:
+ *      transform: translate3d(0, ${scrollY * -0.15}px, 0) via requestAnimationFrame
  */
 export function AmbientBackground({ className, children }: AmbientBackgroundProps) {
+  const parallaxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let rafId: number | null = null;
+
+    const handleScroll = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        if (parallaxRef.current) {
+          const scrollY = window.scrollY || window.pageYOffset || 0;
+          parallaxRef.current.style.transform = `translate3d(0, ${scrollY * -0.15}px, 0)`;
+        }
+        rafId = null;
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   return (
     <div
       className={cn(
-        "relative min-h-screen w-full transition-colors duration-500",
-        "bg-[#ffffff] dark:bg-[#11161B] text-foreground",
+        "relative min-h-screen w-full overflow-x-hidden transition-colors duration-500",
+        "bg-[#f8fafc] dark:bg-[#0f1512] text-foreground",
         className,
       )}
     >
-      {/* Fixed Ambient Background Overlay (behind all interactive content) */}
+      {/* Scrollable Ambient Background Layer (spans full scrollable height) */}
       <div
-        className="pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none"
+        ref={parallaxRef}
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden select-none will-change-transform"
+        style={{ minHeight: "120%", bottom: "-20%" }}
         aria-hidden="true"
       >
         {/* Light Mode Glow Spotlights */}
         <div className="absolute inset-0 block dark:hidden">
-          {/* Top-left soft pastel sky-blue glow */}
-          <div className="absolute -top-[12%] -left-[10%] h-[550px] w-[550px] rounded-full bg-[#bae6fd]/40 blur-3xl md:h-[680px] md:w-[680px]" />
-          {/* Top-right soft pastel lavender / mauve glow */}
-          <div className="absolute -top-[10%] -right-[10%] h-[520px] w-[520px] rounded-full bg-[#fbcfe8]/40 blur-3xl md:h-[680px] md:w-[680px]" />
-          {/* Soft central sky-blue wash */}
-          <div className="absolute top-[6%] left-[25%] h-[380px] w-[480px] rounded-full bg-[#7dd3fc]/20 blur-3xl" />
-          {/* Gradient mask to wash out seamlessly into pure white downward */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#ffffff]/60 to-[#ffffff]" />
+          {/* Top-Left Glow */}
+          <div
+            className="absolute -top-[4%] -left-[10%] h-[720px] w-[720px] rounded-full blur-3xl md:h-[860px] md:w-[860px]"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(125, 211, 252, 0.45) 0%, transparent 70%)",
+            }}
+          />
+          {/* Top-Right Glow */}
+          <div
+            className="absolute -top-[3%] -right-[10%] h-[720px] w-[720px] rounded-full blur-3xl md:h-[860px] md:w-[860px]"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(233, 213, 255, 0.45) 0%, transparent 70%)",
+            }}
+          />
+          {/* Mid Scroll Glow (top: 35%, left) */}
+          <div
+            className="absolute top-[35%] -left-[10%] h-[680px] w-[680px] rounded-full blur-3xl md:h-[820px] md:w-[820px]"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(125, 211, 252, 0.35) 0%, transparent 70%)",
+            }}
+          />
+          {/* Lower Scroll Glow (top: 70%, right) */}
+          <div
+            className="absolute top-[70%] -right-[10%] h-[680px] w-[680px] rounded-full blur-3xl md:h-[820px] md:w-[820px]"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(233, 213, 255, 0.35) 0%, transparent 70%)",
+            }}
+          />
         </div>
 
         {/* Dark Mode Glow Spotlights */}
         <div className="absolute inset-0 hidden dark:block">
-          {/* Top-left muted teal / cyan ambient glow */}
-          <div className="absolute -top-[15%] -left-[10%] h-[550px] w-[550px] rounded-full bg-[#0891b2]/25 blur-3xl md:h-[720px] md:w-[720px]" />
-          {/* Secondary teal mesh spotlight */}
-          <div className="absolute top-[5%] left-[6%] h-[420px] w-[420px] rounded-full bg-[#164e63]/30 blur-3xl" />
-          {/* Top-right muted indigo / violet ambient glow */}
-          <div className="absolute -top-[15%] -right-[10%] h-[550px] w-[550px] rounded-full bg-[#4c1d95]/30 blur-3xl md:h-[720px] md:w-[720px]" />
-          {/* Secondary violet mesh spotlight */}
-          <div className="absolute top-[8%] right-[8%] h-[400px] w-[400px] rounded-full bg-[#581c87]/25 blur-3xl" />
-          {/* Gradient mask to smoothly fade into deep charcoal base */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#11161B]/60 to-[#11161B]" />
+          {/* Top-Left Glow */}
+          <div
+            className="absolute -top-[4%] -left-[10%] h-[720px] w-[720px] rounded-full blur-3xl md:h-[860px] md:w-[860px]"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, transparent 70%)",
+            }}
+          />
+          {/* Top-Right Glow */}
+          <div
+            className="absolute -top-[3%] -right-[10%] h-[720px] w-[720px] rounded-full blur-3xl md:h-[860px] md:w-[860px]"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 70%)",
+            }}
+          />
+          {/* Mid Scroll Glow (top: 35%, left) */}
+          <div
+            className="absolute top-[35%] -left-[10%] h-[680px] w-[680px] rounded-full blur-3xl md:h-[820px] md:w-[820px]"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(16, 185, 129, 0.16) 0%, transparent 70%)",
+            }}
+          />
+          {/* Lower Scroll Glow (top: 70%, right) */}
+          <div
+            className="absolute top-[70%] -right-[10%] h-[700px] w-[700px] rounded-full blur-3xl md:h-[820px] md:w-[820px]"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(99, 102, 241, 0.14) 0%, transparent 70%)",
+            }}
+          />
         </div>
       </div>
 
-      {children}
+      {/* Main interactive page content */}
+      <div className="relative z-10 w-full min-h-screen">
+        {children}
+      </div>
     </div>
   );
 }

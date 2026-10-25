@@ -12,18 +12,31 @@ export function CategoryBar({ active, onSelect }: Props) {
     <div
       id="shop"
       style={{ top: "var(--header-h, 72px)" }}
-      className="sticky z-20 -mx-4 scroll-mt-[calc(var(--header-h,72px)+8px)] border-b border-border bg-background/95 px-4 pb-2 pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+      className="sticky z-20 -mx-4 scroll-mt-[calc(var(--header-h,72px)+8px)] border-b border-border/40 bg-background/60 px-4 pb-2 pt-3 backdrop-blur-md"
     >
-      <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+      <div
+        style={{
+          display: "flex",
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
+          gap: "10px",
+          maskImage:
+            "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
+        }}
+        className="no-scrollbar mask-edge-fade flex gap-[10px] overflow-x-auto pb-1"
+      >
         {CATEGORIES.map(([key, label]) => (
           <button
             key={key}
             onClick={() => onSelect(key)}
             aria-pressed={active === key}
-            className={`flex-none whitespace-nowrap rounded-full border px-4 py-2 text-[13.5px] font-semibold transition-colors ${
+            className={`flex-none shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-[13.5px] font-semibold transition-colors cursor-pointer ${
               active === key
-                ? "border-g900 bg-g900 text-white"
-                : "border-border bg-white hover:border-g600"
+                ? "border-primary bg-primary text-primary-foreground shadow-card"
+                : "border-border bg-card/80 text-foreground hover:bg-secondary"
             }`}
           >
             {label}

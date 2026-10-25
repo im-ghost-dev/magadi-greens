@@ -55,8 +55,10 @@ export function Header({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md transition-[box-shadow,border-color,background-color] duration-300",
-        scrolled ? "border-border/60 shadow-bar" : "border-transparent",
+        "sticky top-0 z-40 border-b transition-[box-shadow,border-color,background-color] duration-300",
+        scrolled
+          ? "border-border/40 bg-background/60 backdrop-blur-md shadow-bar"
+          : "border-transparent bg-transparent",
       )}
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4">
@@ -117,7 +119,7 @@ export function Header({
           </motion.button>
         </div>
       </div>
-      <div className="mx-auto max-w-6xl px-4 pb-2">
+      <div className="mx-auto max-w-6xl px-4 pb-2 bg-transparent">
         <label className="relative block">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -125,7 +127,7 @@ export function Header({
             onChange={(e) => onQuery(e.target.value)}
             placeholder="Search tomatoes, spinach, mango…"
             aria-label="Search products"
-            className="h-11 w-full rounded-full border border-input bg-card pl-10 pr-10 text-[15px] outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+            className="h-11 w-full rounded-full border border-input/60 bg-card/75 dark:bg-card/45 backdrop-blur-sm pl-10 pr-10 text-[15px] outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
           />
           {query && (
             <button
