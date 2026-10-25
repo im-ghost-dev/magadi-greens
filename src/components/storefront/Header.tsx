@@ -1,28 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Moon, Search, ShoppingBasket, Sun, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useCart } from "@/hooks/useCart";
-import { useScrolled } from "@/hooks/useScrolled";
-import { cn } from "@/lib/utils";
 
 export function Header({
   shopName,
   query,
   onQuery,
   onOpenAdmin,
-  isAdminAuthed,
+  children,
 }: {
   shopName: string;
   query: string;
   onQuery: (q: string) => void;
   onOpenAdmin: () => void;
-  isAdminAuthed?: boolean;
+  children?: React.ReactNode;
 }) {
   const { count, bounce, setOpen } = useCart();
-  const scrolled = useScrolled();
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -78,14 +75,26 @@ export function Header({
 
   return (
     <header
-      className={cn(
-        "sticky top-0 z-40 border-b transition-[box-shadow,border-color,background-color] duration-300",
-        scrolled
-          ? "border-border/40 bg-background/60 backdrop-blur-md shadow-bar"
-          : "border-transparent bg-transparent",
-      )}
+      className="sticky top-0 z-40 w-full transition-colors duration-200"
+      style={{
+        background: isDark ? "rgba(15, 21, 18, 0.88)" : "rgba(248, 250, 252, 0.88)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        borderBottom: isDark
+          ? "1px solid rgba(255, 255, 255, 0.08)"
+          : "1px solid rgba(0, 0, 0, 0.06)",
+      }}
     >
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4">
+      {/* Top Header Row */}
+      <div
+        className="mx-auto max-w-6xl"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "12px 16px",
+        }}
+      >
         {/* Store logo with hidden 5-tap admin gesture */}
         <div
           className="flex items-center cursor-pointer select-none"
@@ -101,13 +110,22 @@ export function Header({
         >
           <Logo name={shopName} compact />
         </div>
-        <div className="flex items-center gap-1.5">
-          {/* Light / Dark Mode Toggle */}
+
+        {/* Right Icons Container with solid circular backgrounds */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            flexShrink: 0,
+          }}
+        >
+          {/* Light / Dark Mode Toggle with solid circular background */}
           <button
             type="button"
             onClick={toggleTheme}
             aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-foreground hover:bg-secondary transition cursor-pointer"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border/80 bg-white dark:bg-[#18221d] text-foreground shadow-xs hover:bg-secondary/60 transition cursor-pointer"
           >
             {isDark ? (
               <Sun className="h-5 w-5 text-amber-400" />
@@ -142,7 +160,9 @@ export function Header({
           </motion.button>
         </div>
       </div>
-      <div className="mx-auto max-w-6xl px-4 pb-2 bg-transparent">
+
+      {/* Search Bar Row */}
+      <div className="mx-auto max-w-6xl px-4 pb-2">
         <label className="relative block">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -150,7 +170,7 @@ export function Header({
             onChange={(e) => onQuery(e.target.value)}
             placeholder="Search tomatoes, spinach, mango…"
             aria-label="Search products"
-            className="h-11 w-full rounded-full border border-input/60 bg-card/75 dark:bg-card/45 backdrop-blur-sm pl-10 pr-10 text-[15px] outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+            className="h-11 w-full rounded-full border border-input/60 bg-white/90 dark:bg-[#18221d]/90 backdrop-blur-sm pl-10 pr-10 text-[15px] outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
           />
           {query && (
             <button
@@ -164,6 +184,13 @@ export function Header({
           )}
         </label>
       </div>
+
+      {/* Unified Category Filter Bar */}
+      {children && (
+        <div className="mx-auto max-w-6xl px-4 pb-2">
+          {children}
+        </div>
+      )}
     </header>
   );
 }

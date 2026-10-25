@@ -35,9 +35,8 @@ export const ProductCard = React.memo(function ProductCard({
       onAnimationEnd={onHighlightEnd}
       whileHover={out ? {} : { y: -4, scale: 1.015, transition: spring }}
       whileTap={out ? {} : { scale: 0.98 }}
-      style={{ contentVisibility: "auto", containIntrinsicSize: "280px" }}
       className={cn(
-        "card-intrinsic group flex flex-col rounded-2xl border border-border/70 bg-card shadow-card transition-shadow duration-200",
+        "group flex flex-col rounded-2xl border border-border/70 bg-card shadow-card transition-shadow duration-200",
         !out && "elevate-hover",
         out && "opacity-60 grayscale",
         isHighlighted && "special-glow-highlight",

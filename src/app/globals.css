@@ -231,10 +231,7 @@
   }
 }
 
-@utility card-intrinsic {
-  content-visibility: auto;
-  contain-intrinsic-size: 280px;
-}
+
 
 .special-glow-highlight {
   animation: targetCardGlow 500ms ease-in-out 2 !important;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
 
 interface AmbientBackgroundProps {
@@ -9,13 +9,13 @@ interface AmbientBackgroundProps {
 }
 
 /**
- * Responsive full-height ambient mesh background supporting both light and dark modes.
+ * Unconditional fixed ambient mesh background supporting both light and dark modes.
  *
  * Requirements:
  *  - Base background color:
  *      Light: #f8fafc
  *      Dark:  #0f1512
- *  - Layer: absolute inset-0 pointer-events-none z-0 overflow-hidden (min-height: 100%)
+ *  - Layer: fixed inset-0 pointer-events-none z-0 overflow-hidden (unconditionally stays visible on all views & scroll depths)
  *  - Top-Left Glow:
  *      Light: radial-gradient(circle, rgba(125, 211, 252, 0.45) 0%, transparent 70%)
  *      Dark:  radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, transparent 70%)
@@ -25,36 +25,11 @@ interface AmbientBackgroundProps {
  *  - Mid Glow (top: 35%, left):
  *      Light: radial-gradient(circle, rgba(125, 211, 252, 0.35) 0%, transparent 70%)
  *      Dark:  radial-gradient(circle, rgba(16, 185, 129, 0.16) 0%, transparent 70%)
- *  - Lower Glow (top: 70%, right):
+ *  - Lower Glow (top: 65%, right):
  *      Light: radial-gradient(circle, rgba(233, 213, 255, 0.35) 0%, transparent 70%)
  *      Dark:  radial-gradient(circle, rgba(99, 102, 241, 0.14) 0%, transparent 70%)
- *  - Parallax Shift:
- *      transform: translate3d(0, ${scrollY * -0.15}px, 0) via requestAnimationFrame
  */
 export function AmbientBackground({ className, children }: AmbientBackgroundProps) {
-  const parallaxRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let rafId: number | null = null;
-
-    const handleScroll = () => {
-      if (rafId !== null) return;
-      rafId = requestAnimationFrame(() => {
-        if (parallaxRef.current) {
-          const scrollY = window.scrollY || window.pageYOffset || 0;
-          parallaxRef.current.style.transform = `translate3d(0, ${scrollY * -0.15}px, 0)`;
-        }
-        rafId = null;
-      });
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   return (
     <div
       className={cn(
@@ -63,18 +38,16 @@ export function AmbientBackground({ className, children }: AmbientBackgroundProp
         className,
       )}
     >
-      {/* Scrollable Ambient Background Layer (spans full scrollable height) */}
+      {/* Unconditional Fixed Ambient Background Layer (stays visible regardless of page height or scroll) */}
       <div
-        ref={parallaxRef}
-        className="pointer-events-none absolute inset-0 z-0 overflow-hidden select-none will-change-transform"
-        style={{ minHeight: "120%", bottom: "-20%" }}
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden select-none"
         aria-hidden="true"
       >
         {/* Light Mode Glow Spotlights */}
         <div className="absolute inset-0 block dark:hidden">
           {/* Top-Left Glow */}
           <div
-            className="absolute -top-[4%] -left-[10%] h-[720px] w-[720px] rounded-full blur-3xl md:h-[860px] md:w-[860px]"
+            className="absolute -top-[12%] -left-[12%] h-[680px] w-[680px] rounded-full blur-3xl opacity-85 md:h-[820px] md:w-[820px]"
             style={{
               background:
                 "radial-gradient(circle, rgba(125, 211, 252, 0.45) 0%, transparent 70%)",
@@ -82,23 +55,23 @@ export function AmbientBackground({ className, children }: AmbientBackgroundProp
           />
           {/* Top-Right Glow */}
           <div
-            className="absolute -top-[3%] -right-[10%] h-[720px] w-[720px] rounded-full blur-3xl md:h-[860px] md:w-[860px]"
+            className="absolute -top-[10%] -right-[12%] h-[680px] w-[680px] rounded-full blur-3xl opacity-85 md:h-[820px] md:w-[820px]"
             style={{
               background:
                 "radial-gradient(circle, rgba(233, 213, 255, 0.45) 0%, transparent 70%)",
             }}
           />
-          {/* Mid Scroll Glow (top: 35%, left) */}
+          {/* Mid/Lower Ambient Glow Blob (left) */}
           <div
-            className="absolute top-[35%] -left-[10%] h-[680px] w-[680px] rounded-full blur-3xl md:h-[820px] md:w-[820px]"
+            className="absolute top-[35%] -left-[10%] h-[640px] w-[640px] rounded-full blur-3xl opacity-75 md:h-[750px] md:w-[750px]"
             style={{
               background:
                 "radial-gradient(circle, rgba(125, 211, 252, 0.35) 0%, transparent 70%)",
             }}
           />
-          {/* Lower Scroll Glow (top: 70%, right) */}
+          {/* Mid/Lower Ambient Glow Blob (right) */}
           <div
-            className="absolute top-[70%] -right-[10%] h-[680px] w-[680px] rounded-full blur-3xl md:h-[820px] md:w-[820px]"
+            className="absolute top-[65%] -right-[10%] h-[640px] w-[640px] rounded-full blur-3xl opacity-75 md:h-[750px] md:w-[750px]"
             style={{
               background:
                 "radial-gradient(circle, rgba(233, 213, 255, 0.35) 0%, transparent 70%)",
@@ -110,7 +83,7 @@ export function AmbientBackground({ className, children }: AmbientBackgroundProp
         <div className="absolute inset-0 hidden dark:block">
           {/* Top-Left Glow */}
           <div
-            className="absolute -top-[4%] -left-[10%] h-[720px] w-[720px] rounded-full blur-3xl md:h-[860px] md:w-[860px]"
+            className="absolute -top-[12%] -left-[12%] h-[680px] w-[680px] rounded-full blur-3xl opacity-85 md:h-[820px] md:w-[820px]"
             style={{
               background:
                 "radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, transparent 70%)",
@@ -118,23 +91,23 @@ export function AmbientBackground({ className, children }: AmbientBackgroundProp
           />
           {/* Top-Right Glow */}
           <div
-            className="absolute -top-[3%] -right-[10%] h-[720px] w-[720px] rounded-full blur-3xl md:h-[860px] md:w-[860px]"
+            className="absolute -top-[10%] -right-[12%] h-[680px] w-[680px] rounded-full blur-3xl opacity-85 md:h-[820px] md:w-[820px]"
             style={{
               background:
                 "radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 70%)",
             }}
           />
-          {/* Mid Scroll Glow (top: 35%, left) */}
+          {/* Mid/Lower Ambient Glow Blob (left) */}
           <div
-            className="absolute top-[35%] -left-[10%] h-[680px] w-[680px] rounded-full blur-3xl md:h-[820px] md:w-[820px]"
+            className="absolute top-[35%] -left-[10%] h-[640px] w-[640px] rounded-full blur-3xl opacity-75 md:h-[750px] md:w-[750px]"
             style={{
               background:
                 "radial-gradient(circle, rgba(16, 185, 129, 0.16) 0%, transparent 70%)",
             }}
           />
-          {/* Lower Scroll Glow (top: 70%, right) */}
+          {/* Mid/Lower Ambient Glow Blob (right) */}
           <div
-            className="absolute top-[70%] -right-[10%] h-[700px] w-[700px] rounded-full blur-3xl md:h-[820px] md:w-[820px]"
+            className="absolute top-[65%] -right-[10%] h-[640px] w-[640px] rounded-full blur-3xl opacity-75 md:h-[750px] md:w-[750px]"
             style={{
               background:
                 "radial-gradient(circle, rgba(99, 102, 241, 0.14) 0%, transparent 70%)",
@@ -144,7 +117,10 @@ export function AmbientBackground({ className, children }: AmbientBackgroundProp
       </div>
 
       {/* Main interactive page content */}
-      <div className="relative z-10 w-full min-h-screen">
+      <div
+        className="relative z-[1] w-full min-h-screen"
+        style={{ background: "transparent" }}
+      >
         {children}
       </div>
     </div>

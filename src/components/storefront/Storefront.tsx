@@ -78,16 +78,8 @@ export function Storefront() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const activeSpecialCleanupRef = useRef<(() => void) | null>(null);
-
   function handleSelectSpecial(special: Special) {
     if (!products || products.length === 0) return;
-
-    // Cancel any ongoing special highlight/timers
-    if (activeSpecialCleanupRef.current) {
-      activeSpecialCleanupRef.current();
-      activeSpecialCleanupRef.current = null;
-    }
 
     // 1. Match product by productId or normalized words
     let target = special.productId
@@ -128,139 +120,82 @@ export function Storefront() {
 
     if (!target) return;
 
-    const targetId = target.id;
+    const targetProductId = target.id;
 
-    // 2. Auto-reset filters if item is hidden
-    let resetNeeded = false;
-    if (query) {
-      setQuery("");
-      resetNeeded = true;
-    }
-    if (inStockOnly && !target.inStock) {
-      setInStockOnly(false);
-      resetNeeded = true;
-    }
-    if (cat !== "All" && target.category !== cat) {
-      setCat("All");
-      resetNeeded = true;
-    }
+    // 1. Ensure 'All' category is active and search is cleared so the card is in the DOM
+    if (cat !== "All") setCat("All");
+    if (query) setQuery("");
+    if (inStockOnly && !target.inStock) setInStockOnly(false);
 
-    // 3. Smooth scroll and 2x glow highlight
-    function executeScrollAndGlow(attempt = 0) {
-      const el = document.getElementById(`product-card-${targetId}`);
-      if (!el) {
-        if (attempt < 10) {
-          setTimeout(() => executeScrollAndGlow(attempt + 1), 30);
-        }
-        return;
-      }
+    // 2. Wait one frame for DOM to ensure target card exists
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const el = document.getElementById(`product-card-${targetProductId}`);
+        if (!el) return;
 
-      // 1. Force target card visibility before scrolling begins
-      // Ensures off-screen card using content-visibility: auto is rendered & painted immediately
-      el.style.contentVisibility = "visible";
+        // Scroll target card to the center of the screen
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
 
-      // 2. Smooth scroll the element into center of viewport
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+        // 3. Poll with requestAnimationFrame until scroll stops AND card is in viewport
+        let lastScrollY = window.scrollY;
+        let stableFrames = 0;
+        let totalFrames = 0;
 
-      // 3. Trigger 2x glow ONLY after card enters viewport
-      let hasTriggered = false;
-      let observer: IntersectionObserver | null = null;
-      let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
-      let resetTimer: ReturnType<typeof setTimeout> | null = null;
+        const waitForScrollEnd = () => {
+          totalFrames++;
+          const currentScrollY = window.scrollY;
+          const rect = el.getBoundingClientRect();
+          const isVisibleInCenter =
+            rect.top >= 60 && rect.bottom <= window.innerHeight - 40;
 
-      const onScrollEnd = () => {
-        triggerGlow();
-      };
-
-      const cleanup = () => {
-        if (observer) {
-          observer.disconnect();
-          observer = null;
-        }
-        if (fallbackTimer) {
-          clearTimeout(fallbackTimer);
-          fallbackTimer = null;
-        }
-        if (resetTimer) {
-          clearTimeout(resetTimer);
-          resetTimer = null;
-        }
-        window.removeEventListener("scrollend", onScrollEnd);
-        el.classList.remove("special-glow-highlight");
-        el.style.contentVisibility = "";
-      };
-
-      activeSpecialCleanupRef.current = cleanup;
-
-      const triggerGlow = () => {
-        if (hasTriggered) return;
-        hasTriggered = true;
-
-        if (observer) {
-          observer.disconnect();
-          observer = null;
-        }
-        if (fallbackTimer) {
-          clearTimeout(fallbackTimer);
-          fallbackTimer = null;
-        }
-        window.removeEventListener("scrollend", onScrollEnd);
-
-        // 4. DOM-level animation trigger (bypasses React.memo & rerenders)
-        el.classList.remove("special-glow-highlight");
-        void el.offsetWidth; // Force synchronous browser reflow
-        el.classList.add("special-glow-highlight");
-        setHighlightedId(targetId);
-
-        // Reset after 2 cycles of 500ms = 1000ms (+ 50ms buffer)
-        resetTimer = setTimeout(() => {
-          cleanup();
-          setHighlightedId((curr) => (curr === targetId ? null : curr));
-          if (activeSpecialCleanupRef.current === cleanup) {
-            activeSpecialCleanupRef.current = null;
+          if (Math.abs(currentScrollY - lastScrollY) < 1.5 && isVisibleInCenter) {
+            stableFrames++;
+          } else {
+            stableFrames = 0;
           }
-        }, 1050);
-      };
+          lastScrollY = currentScrollY;
 
-      window.addEventListener("scrollend", onScrollEnd, { once: true });
+          // Once scroll has settled on the card (or max ~1.2s safety cap)
+          if (stableFrames >= 6 || totalFrames > 75) {
+            // Ensure it is centered in case layout shifted during first scroll
+            if (!isVisibleInCenter) {
+              el.scrollIntoView({ behavior: "instant", block: "center" });
+            }
 
-      // Check if element is already within the central viewport region
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const isAlreadyVisible = rect.top >= 0 && rect.bottom <= vh;
+            // 4. Play 2x 500ms glow directly via Web Animations API (immune to React re-renders)
+            const isDark = document.documentElement.classList.contains("dark");
+            el.animate(
+              [
+                {
+                  boxShadow: "0 0 0 0px rgba(24, 92, 55, 0)",
+                  transform: "scale(1)",
+                },
+                {
+                  boxShadow: isDark
+                    ? "0 0 0 4px #4ade80, 0 0 32px rgba(74, 222, 128, 0.95)"
+                    : "0 0 0 4px #185c37, 0 0 32px rgba(34, 197, 94, 0.95)",
+                  transform: "scale(1.03)",
+                },
+                {
+                  boxShadow: "0 0 0 0px rgba(24, 92, 55, 0)",
+                  transform: "scale(1)",
+                },
+              ],
+              {
+                duration: 500,
+                iterations: 2,
+                easing: "ease-in-out",
+              },
+            );
+            return;
+          }
 
-      if (isAlreadyVisible) {
-        setTimeout(triggerGlow, 80);
-      } else {
-        if (typeof IntersectionObserver !== "undefined") {
-          observer = new IntersectionObserver(
-            (entries) => {
-              for (const entry of entries) {
-                if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-                  triggerGlow();
-                  break;
-                }
-              }
-            },
-            {
-              threshold: [0.5, 0.6],
-            },
-          );
-          observer.observe(el);
-        }
+          requestAnimationFrame(waitForScrollEnd);
+        };
 
-        // Fallback timer ensures glow starts even if scrollend or observer threshold is missed
-        fallbackTimer = setTimeout(() => {
-          triggerGlow();
-        }, 500);
-      }
-    }
-
-    if (resetNeeded) {
-      setTimeout(() => executeScrollAndGlow(0), 40);
-    } else {
-      requestAnimationFrame(() => executeScrollAndGlow(0));
-    }
+        requestAnimationFrame(waitForScrollEnd);
+      }, 60);
+    });
   }
 
   const searched = useMemo(() => {
@@ -296,20 +231,29 @@ export function Storefront() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="relative z-[1] min-h-screen" style={{ background: "transparent" }}>
       <Header
         shopName={settings?.shopName ?? "MAGADI GREENS"}
         query={query}
         onQuery={setQuery}
         onOpenAdmin={() => setView("admin")}
-        isAdminAuthed={adminAuthed}
-      />
+      >
+        <CategoryChips
+          options={[...FILTERS]}
+          value={cat}
+          onChange={setCat}
+          counts={counts}
+          inStockOnly={inStockOnly}
+          onInStock={setInStockOnly}
+        />
+      </Header>
 
       <motion.main
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="bg-transparent"
+        className="relative z-[1]"
+        style={{ background: "transparent" }}
       >
         {!query && <Hero settings={settings} />}
         {!query && (
@@ -319,27 +263,12 @@ export function Storefront() {
           />
         )}
 
-        <div
-          id="categories"
-          className={cn(
-            "sticky top-[106px] z-30 mt-4 border-b transition-[box-shadow,border-color,background-color] duration-300",
-            scrolled
-              ? "border-border/40 bg-background/60 backdrop-blur-md shadow-bar"
-              : "border-transparent bg-transparent",
-          )}
+        <section
+          id="menu"
+          className="relative z-[1] mx-auto max-w-6xl px-4 mt-3 pb-28"
+          style={{ background: "transparent" }}
+          aria-label="Products"
         >
-          <CategoryChips
-            className="mx-auto max-w-6xl px-4"
-            options={[...FILTERS]}
-            value={cat}
-            onChange={setCat}
-            counts={counts}
-            inStockOnly={inStockOnly}
-            onInStock={setInStockOnly}
-          />
-        </div>
-
-        <section id="menu" className="mx-auto max-w-6xl px-4 py-4 pb-28 bg-transparent" aria-label="Products">
           {products === null ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
