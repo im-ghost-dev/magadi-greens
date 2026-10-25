@@ -1,144 +1,168 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useProducts } from "@/lib/use-products";
-import { useSettings } from "@/lib/use-settings";
-import { useCart } from "@/store/useCart";
-import { useAdmin } from "@/store/useAdmin";
+import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { SearchX } from "lucide-react";
 import { Header } from "./Header";
 import { Hero } from "./Hero";
-import { TodaysSpecial } from "./TodaysSpecial";
-import { CategoryBar } from "./CategoryBar";
-import { ProductGrid } from "./ProductGrid";
+import { SpecialsCarousel } from "./SpecialsCarousel";
+import { CategoryChips } from "./CategoryChips";
+import { ProductCard, ProductCardSkeleton } from "./ProductCard";
 import { CartDrawer } from "./CartDrawer";
-import { StoreInfo } from "./StoreInfo";
+import { ContactSection } from "./ContactSection";
 import { AdminApp } from "@/components/admin/AdminApp";
+import { getProducts, getSettings, getSpecials, isAdmin } from "@/lib/api";
+import { useScrolled } from "@/hooks/useScrolled";
+import { cn } from "@/lib/utils";
+import { CATEGORIES, type Product, type ShopSettings, type Special } from "@/types";
 
-/** The whole storefront – header, hero, category bar, product grid, store info, cart drawer. */
+const FILTERS = ["All", ...CATEGORIES] as const;
+type Filter = (typeof FILTERS)[number];
+
 export function Storefront() {
-  const { products, loading, refetch } = useProducts();
-  const { settings } = useSettings();
-  const cart = useCart((s) => s.cart);
-  const sanitize = useCart((s) => s.sanitize);
-  const adminStatus = useAdmin((s) => s.status);
-  const setAuthed = useAdmin((s) => s.setAuthed);
-  const setStatus = useAdmin((s) => s.setStatus);
-
-  const [search, setSearch] = useState("");
-  const [activeCat, setActiveCat] = useState("all");
-  const [cartOpen, setCartOpen] = useState(false);
+  const [products, setProducts] = useState<Product[] | null>(null);
+  const [specials, setSpecials] = useState<Special[]>([]);
+  const [settings, setSettings] = useState<ShopSettings | null>(null);
+  const [query, setQuery] = useState("");
+  const [cat, setCat] = useState<Filter>("All");
+  const [inStockOnly, setInStockOnly] = useState(false);
   const [view, setView] = useState<"store" | "admin">("store");
+  const [adminAuthed, setAdminAuthed] = useState(false);
+  const scrolled = useScrolled(360);
 
-  // Measure the sticky header's real height (it changes between mobile = 2 rows
-  // and desktop = 1 row) and publish it as --header-h so the sticky category bar
-  // can sit flush underneath it on every screen size. Also re-measure on resize
-  // so the layout never drifts.
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    const hdr = document.getElementById("mg-header");
-    if (!hdr) return;
-    const apply = () => {
-      const h = hdr.offsetHeight;
-      document.documentElement.style.setProperty("--header-h", `${h}px`);
-    };
-    apply();
-    const ro = new ResizeObserver(apply);
-    ro.observe(hdr);
-    window.addEventListener("resize", apply, { passive: true });
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", apply);
-    };
-  }, [view]);
+  function loadData() {
+    getProducts().then(setProducts).catch(console.error);
+    getSpecials().then(setSpecials).catch(console.error);
+    getSettings().then(setSettings).catch(console.error);
+    isAdmin().then(setAdminAuthed).catch(() => setAdminAuthed(false));
+  }
 
-  // Re-sanitize the cart whenever the catalogue changes (drops gone/sold-out items,
-  // snaps quantities to valid steps).
-  const catalogueKey = products.map((p) => `${p.id}:${p.stock}:${p.unit}`).join("|");
   useEffect(() => {
-    if (!products.length) return;
-    const valid = new Map(
-      products.map((p) => [
-        p.id,
-        {
-          stock: p.stock,
-          step: p.unit === "kg" ? 0.25 : 1,
-          max: p.unit === "kg" ? 25 : 50,
-        },
-      ]),
+    loadData();
+  }, []);
+
+  const searched = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (products ?? []).filter(
+      (p) =>
+        (!q || p.name.toLowerCase().includes(q) || p.plu.includes(q)) &&
+        (!inStockOnly || p.inStock),
     );
-    sanitize(valid);
-  }, [catalogueKey, products, sanitize]);
+  }, [products, query, inStockOnly]);
 
-  // On mount, ask the server whether the admin cookie is still valid.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const r = await fetch("/api/admin/login", { cache: "no-store" });
-        const data = await r.json();
-        if (!cancelled) setAuthed(!!data.ok);
-      } catch {
-        if (!cancelled) setStatus("guest");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [setAuthed, setStatus]);
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { All: searched.length };
+    for (const p of searched) c[p.category] = (c[p.category] ?? 0) + 1;
+    return c;
+  }, [searched]);
+
+  const visible = cat === "All" ? searched : searched.filter((p) => p.category === cat);
+
+  if (view === "admin") {
+    return (
+      <AdminApp
+        onExit={() => {
+          setView("store");
+          loadData();
+        }}
+        onSaved={loadData}
+      />
+    );
+  }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="min-h-screen">
       <Header
-        cartCount={Object.keys(cart).length}
-        onOpenCart={() => setCartOpen(true)}
-        search={search}
-        onSearch={setSearch}
-        view={view}
-        onSwitchView={setView}
-        adminStatus={adminStatus}
-        settings={settings}
+        shopName={settings?.shopName ?? "MAGADI GREENS"}
+        query={query}
+        onQuery={setQuery}
+        onOpenAdmin={() => setView("admin")}
+        isAdminAuthed={adminAuthed}
       />
 
-      {view === "admin" ? (
-        <main className="flex-1">
-          <AdminApp onExit={() => setView("store")} onSaved={refetch} />
-        </main>
-      ) : (
-        <main className="flex-1">
-          <div className="mx-auto w-full max-w-[1180px] px-4">
-            <Hero settings={settings} />
-            <TodaysSpecial products={products} />
-            <CategoryBar active={activeCat} onSelect={setActiveCat} />
-            <ProductGrid
-              products={products}
-              search={search}
-              activeCat={activeCat}
-              loading={loading}
-            />
-            <StoreInfo settings={settings} />
-          </div>
-        </main>
-      )}
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {!query && <Hero settings={settings} />}
+        {!query && <SpecialsCarousel specials={specials} />}
 
-      <CartDrawer
-        open={cartOpen}
-        onOpenChange={setCartOpen}
-        products={products}
-        settings={settings}
-        onSavedOrder={() => refetch()}
-      />
-
-      <footer className="mt-auto border-t border-border bg-white py-5 text-center text-xs text-mute">
-        <div className="mb-1">
-          © {settings.shopName} · {settings.address}
-        </div>
-        <button
-          onClick={() => setView("admin")}
-          className="inline-flex items-center gap-1 font-semibold text-g700 hover:underline"
+        <div
+          className={cn(
+            "sticky top-[106px] z-30 mt-4 border-b bg-background/85 backdrop-blur-md transition-[box-shadow,border-color] duration-300",
+            scrolled ? "border-border/50 shadow-bar" : "border-transparent",
+          )}
         >
-          Admin login
-        </button>
-      </footer>
+          <CategoryChips
+            className="mx-auto max-w-6xl px-4"
+            options={[...FILTERS]}
+            value={cat}
+            onChange={setCat}
+            counts={counts}
+            inStockOnly={inStockOnly}
+            onInStock={setInStockOnly}
+          />
+        </div>
+
+        <section className="mx-auto max-w-6xl px-4 py-4" aria-label="Products">
+          {products === null ? (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : visible.length === 0 ? (
+            <div className="flex flex-col items-center py-16 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
+                <SearchX className="h-7 w-7 text-primary" />
+              </div>
+              <p className="mt-4 font-semibold text-lg">Nothing matches “{query || cat}”</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Try another name or clear the filters.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setCat("All");
+                  setInStockOnly(false);
+                }}
+                className="mt-4 h-11 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground cursor-pointer"
+              >
+                Clear filters
+              </button>
+            </div>
+          ) : (
+            <motion.div
+              layout
+              className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4"
+            >
+              <AnimatePresence mode="popLayout">
+                {visible.map((p, i) => (
+                  <ProductCard key={p.id} product={p} index={i} />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </section>
+
+        <footer className="mx-auto max-w-6xl px-4 pb-10 pt-6">
+          {settings && <ContactSection settings={settings} />}
+          <div className="mt-6 flex flex-col items-center gap-1.5 text-center text-xs text-muted-foreground">
+            <p>© {settings?.shopName ?? "MAGADI GREENS"}</p>
+            <button
+              type="button"
+              onClick={() => setView("admin")}
+              className="font-medium text-primary hover:underline cursor-pointer"
+            >
+              Shopkeeper Admin Login
+            </button>
+          </div>
+        </footer>
+      </motion.main>
+
+      <CartDrawer settings={settings} />
     </div>
   );
 }
