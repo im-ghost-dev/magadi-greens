@@ -57,7 +57,10 @@ export function Storefront() {
     return c;
   }, [searched]);
 
-  const visible = cat === "All" ? searched : searched.filter((p) => p.category === cat);
+  const visible = useMemo(
+    () => (cat === "All" ? searched : searched.filter((p) => p.category === cat)),
+    [cat, searched],
+  );
 
   if (view === "admin") {
     return (
@@ -106,7 +109,7 @@ export function Storefront() {
           />
         </div>
 
-        <section id="menu" className="mx-auto max-w-6xl px-4 py-4" aria-label="Products">
+        <section id="menu" className="mx-auto max-w-6xl px-4 py-4 pb-28" aria-label="Products">
           {products === null ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -136,14 +139,15 @@ export function Storefront() {
             </div>
           ) : (
             <motion.div
-              layout
-              className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4"
+              key={cat + (inStockOnly ? "-stock" : "") + (query ? "-q" : "")}
+              initial={{ opacity: 0, transform: "translate3d(0, 6px, 0)" }}
+              animate={{ opacity: 1, transform: "translate3d(0, 0, 0)" }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 will-change-[transform,opacity]"
             >
-              <AnimatePresence mode="popLayout">
-                {visible.map((p, i) => (
-                  <ProductCard key={p.id} product={p} index={i} />
-                ))}
-              </AnimatePresence>
+              {visible.map((p, i) => (
+                <ProductCard key={p.id} product={p} index={i} />
+              ))}
             </motion.div>
           )}
         </section>
@@ -168,7 +172,7 @@ export function Storefront() {
         subtitle="View Menu"
         subtitleHref="#menu"
       />
-      <CartDrawer settings={settings} />
+      <CartDrawer products={products} settings={settings} />
     </div>
   );
 }

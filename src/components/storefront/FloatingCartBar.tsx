@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
@@ -28,9 +28,8 @@ const DEFAULT_THUMB =
   "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=120&auto=format&fit=crop&q=80";
 
 /**
- * Standalone, reusable floating bottom cart bar component that stays fixed at
- * the bottom center of the screen (bottom: 20px, z-index: 50) when the cart has
- * 1 or more items.
+ * Reusable floating bottom cart bar component fixed at bottom: 20px, z-index: 50.
+ * Automatically hidden when cart count is 0 or when the cart drawer is open.
  */
 export function FloatingCartBar({
   itemCount,
@@ -49,7 +48,7 @@ export function FloatingCartBar({
   const [dismissed, setDismissed] = useState(false);
   const [lastCount, setLastCount] = useState(effectiveCount);
 
-  // If the item count increases, automatically un-dismiss the bar
+  // If new items are added, automatically un-dismiss the bar
   if (effectiveCount !== lastCount) {
     if (effectiveCount > lastCount) {
       setDismissed(false);
@@ -57,10 +56,9 @@ export function FloatingCartBar({
     setLastCount(effectiveCount);
   }
 
-  // Derive thumbnail image if not provided
-  const activeThumbnail =
-    thumbnail ||
-    (cart.lines.length > 0 ? "/images/mangoes.jpg" : DEFAULT_THUMB);
+  // Derive thumbnail from the most recent cart item image, or prop, or default
+  const latestCartImg = cart.lines[cart.lines.length - 1]?.image;
+  const activeThumbnail = thumbnail || latestCartImg || DEFAULT_THUMB;
 
   function handleOpenCart() {
     if (onViewCart) {
@@ -79,7 +77,8 @@ export function FloatingCartBar({
     }
   }
 
-  const isVisible = effectiveCount > 0 && !dismissed;
+  // Hidden when empty, dismissed, or when the cart drawer is open
+  const isVisible = effectiveCount > 0 && !dismissed && !cart.open;
 
   return (
     <AnimatePresence>
@@ -92,40 +91,81 @@ export function FloatingCartBar({
           animate={{ y: 0, opacity: 1, x: "-50%" }}
           exit={{ y: reduce ? 0 : 40, opacity: 0, x: "-50%" }}
           transition={{ type: "spring", stiffness: 420, damping: 30 }}
-          className={cn(
-            "fixed bottom-5 left-1/2 z-50 max-w-[calc(100vw-24px)] select-none",
-            className,
-          )}
+          style={{
+            position: "fixed",
+            bottom: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 50,
+            width: "calc(100vw - 24px)",
+            maxWidth: "420px",
+          }}
+          className={cn("select-none", className)}
         >
-          {/* Outer Pill Container */}
+          {/* Pill Container */}
           <div
+            style={{
+              borderRadius: "9999px",
+              padding: "8px 10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "10px",
+            }}
             className={cn(
-              "flex items-center gap-3 rounded-full p-2 pr-2.5 transition-shadow duration-300",
+              "w-full transition-shadow duration-300",
               "bg-white dark:bg-[#23252d]",
               "border border-black/10 dark:border-white/10",
               "shadow-[0_12px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45)]",
             )}
           >
-            {/* Left 48x48 Circular Thumbnail */}
+            {/* Left 48px x 48px Circular Thumbnail */}
             <img
               src={activeThumbnail}
-              alt="Item Thumbnail"
+              alt={title}
               width={48}
               height={48}
-              className="h-12 w-12 shrink-0 rounded-full object-cover bg-black/10"
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                flexShrink: 0,
+              }}
+              className="bg-black/10"
               onError={(e) => {
-                // Fallback to default thumbnail on broken image
                 (e.currentTarget as HTMLImageElement).src = DEFAULT_THUMB;
               }}
             />
 
-            {/* Middle Text Stack */}
-            <div className="flex min-w-[110px] flex-col justify-center pr-2">
-              <span className="whitespace-nowrap text-base font-bold leading-tight text-gray-900 dark:text-white">
+            {/* Middle Text Stack with truncate so it never collides on mobile */}
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+              }}
+            >
+              <span
+                style={{
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+                className="block text-base font-bold leading-tight text-gray-900 dark:text-white"
+              >
                 {title}
               </span>
               <a
                 href={subtitleHref}
+                style={{
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
                 className="mt-0.5 inline-flex items-center gap-1 text-[13.5px] font-medium text-gray-600 transition-opacity hover:opacity-80 dark:text-gray-300"
               >
                 {subtitle}
@@ -135,35 +175,46 @@ export function FloatingCartBar({
               </a>
             </div>
 
-            {/* Right Coral-Red CTA Button */}
+            {/* Right Coral-Red Pill CTA Button */}
             <button
               type="button"
               onClick={handleOpenCart}
-              className={cn(
-                "flex shrink-0 flex-col items-center justify-center rounded-full px-5 py-2 text-white",
-                "bg-[#db545a] hover:bg-[#c9464c] active:scale-95 transition-all duration-150 cursor-pointer",
-              )}
+              style={{
+                backgroundColor: "#db545a",
+                borderRadius: "9999px",
+                padding: "8px 18px",
+                flexShrink: 0,
+              }}
+              className="flex flex-col items-center justify-center text-white transition hover:bg-[#c9464c] active:scale-95 cursor-pointer"
             >
-              <span className="text-[15px] font-bold leading-tight">View Cart</span>
-              <span className="text-xs font-normal text-white/90">
+              <span className="text-[15px] font-bold leading-tight whitespace-nowrap">
+                View Cart
+              </span>
+              <span className="text-xs font-normal text-white/90 mt-0.5 whitespace-nowrap">
                 {effectiveCount} {effectiveCount === 1 ? "item" : "items"}
               </span>
             </button>
 
-            {/* Far Right Circular Close Button */}
+            {/* Circular Close Button (34px x 34px) */}
             <button
               type="button"
               onClick={handleClose}
               aria-label="Close cart bar"
+              style={{
+                width: "34px",
+                height: "34px",
+                borderRadius: "50%",
+                flexShrink: 0,
+              }}
               className={cn(
-                "flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full cursor-pointer",
-                "bg-gray-100 text-gray-500 hover:opacity-80 transition-opacity",
+                "flex items-center justify-center transition-opacity hover:opacity-80 cursor-pointer",
+                "bg-gray-100 text-gray-500",
                 "dark:bg-[#17181e] dark:text-gray-400",
               )}
             >
               <svg
-                width="12"
-                height="12"
+                width="14"
+                height="14"
                 viewBox="0 0 14 14"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"

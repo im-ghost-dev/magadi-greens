@@ -80,7 +80,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
           );
         return [
           ...prev,
-          { productId: p.id, qty: stepFor(p.unit), priceSnapshot: p.price },
+          {
+            productId: p.id,
+            qty: stepFor(p.unit),
+            priceSnapshot: p.price,
+            name: p.name,
+            unit: p.unit,
+            image: p.image ?? null,
+          },
         ];
       });
       const badge = document.getElementById("cart-badge-target");

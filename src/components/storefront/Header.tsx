@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, Search, ShoppingBasket, X } from "lucide-react";
+import { Lock, Moon, Search, ShoppingBasket, Sun, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useCart } from "@/hooks/useCart";
 import { useScrolled } from "@/hooks/useScrolled";
@@ -22,11 +23,39 @@ export function Header({
 }) {
   const { count, bounce, setOpen } = useCart();
   const scrolled = useScrolled();
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const saved = localStorage.getItem("mg_theme");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const dark = saved ? saved === "dark" : prefersDark;
+      setIsDark(dark);
+      if (dark) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  function toggleTheme() {
+    const next = !isDark;
+    setIsDark(next);
+    if (next) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("mg_theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("mg_theme", "light");
+    }
+  }
 
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md transition-[box-shadow,border-color] duration-300",
+        "sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md transition-[box-shadow,border-color,background-color] duration-300",
         scrolled ? "border-border/60 shadow-bar" : "border-transparent",
       )}
     >
@@ -35,6 +64,21 @@ export function Header({
           <Logo name={shopName} compact />
         </div>
         <div className="flex items-center gap-1.5">
+          {/* Light / Dark Mode Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-foreground hover:bg-secondary transition cursor-pointer"
+          >
+            {isDark ? (
+              <Sun className="h-5 w-5 text-amber-400" />
+            ) : (
+              <Moon className="h-5 w-5 text-primary-deep" />
+            )}
+          </button>
+
+          {/* Admin Button */}
           <button
             type="button"
             onClick={onOpenAdmin}
@@ -46,6 +90,8 @@ export function Header({
               {isAdminAuthed ? "Admin panel" : "Admin"}
             </span>
           </button>
+
+          {/* Cart Badge Button */}
           <motion.button
             type="button"
             key={`cart-${bounce}`}

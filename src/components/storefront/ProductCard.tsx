@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import React, { useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
 import type { Product } from "@/types";
 import { ProductImage } from "./ProductImage";
@@ -10,29 +10,28 @@ import { useCart } from "@/hooks/useCart";
 import { formatQty, rupee, stepFor } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const spring = { type: "spring" as const, stiffness: 300, damping: 20 };
-const FIRST_SCREEN = 8;
+const spring = { type: "spring" as const, stiffness: 400, damping: 25 };
 
-export function ProductCard({ product: p, index }: { product: Product; index: number }) {
+export const ProductCard = React.memo(function ProductCard({
+  product: p,
+  index,
+}: {
+  product: Product;
+  index: number;
+}) {
   const { add, qtyOf, setQty } = useCart();
-  const reduce = useReducedMotion();
   const imgRef = useRef<HTMLDivElement>(null);
   const qty = qtyOf(p.id);
   const out = !p.inStock;
   const showMrp = p.price != null && p.mrp != null && p.mrp > p.price;
-  // Stagger only the first screenful; later cards just fade in quickly.
-  const delay = reduce || index >= FIRST_SCREEN ? 0 : 0.15 + index * 0.04;
 
   return (
     <motion.article
-      layout
-      initial={{ opacity: 0, y: reduce ? 0 : 18 }}
-      animate={{ opacity: 1, y: 0, transition: { duration: 0.35, delay, ease: [0.22, 1, 0.36, 1] } }}
-      exit={{ opacity: 0, scale: 0.96 }}
-      whileHover={out ? {} : { y: -6, scale: 1.02, transition: spring }}
-      whileTap={out ? {} : { scale: 0.97, transition: { type: "spring", stiffness: 500, damping: 18 } }}
+      whileHover={out ? {} : { y: -4, scale: 1.015, transition: spring }}
+      whileTap={out ? {} : { scale: 0.98 }}
+      style={{ contentVisibility: "auto", containIntrinsicSize: "280px" }}
       className={cn(
-        "group flex flex-col rounded-2xl border border-border/70 bg-card shadow-card will-change-transform",
+        "card-intrinsic group flex flex-col rounded-2xl border border-border/70 bg-card shadow-card transition-shadow duration-200",
         !out && "elevate-hover",
         out && "opacity-60 grayscale",
       )}
@@ -48,9 +47,9 @@ export function ProductCard({ product: p, index }: { product: Product; index: nu
           {p.discount > 0 && p.price != null && !out && (
             <motion.span
               key="d"
-              initial={{ scale: 0.6, opacity: 0 }}
+              initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.6, opacity: 0 }}
+              exit={{ scale: 0.7, opacity: 0 }}
               transition={spring}
               className="absolute left-2 top-2 rounded-full bg-sale px-2 py-0.5 text-[11px] font-bold text-sale-foreground shadow-card"
             >
@@ -60,9 +59,9 @@ export function ProductCard({ product: p, index }: { product: Product; index: nu
           {out && (
             <motion.span
               key="o"
-              initial={{ scale: 0.6, opacity: 0 }}
+              initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.6, opacity: 0 }}
+              exit={{ scale: 0.7, opacity: 0 }}
               transition={spring}
               className="absolute left-2 top-2 rounded-full bg-foreground/80 px-2 py-0.5 text-[11px] font-semibold text-background"
             >
@@ -130,7 +129,7 @@ export function ProductCard({ product: p, index }: { product: Product; index: nu
       </div>
     </motion.article>
   );
-}
+});
 
 export function ProductCardSkeleton() {
   return (

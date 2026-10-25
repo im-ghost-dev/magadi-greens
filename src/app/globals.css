@@ -65,41 +65,79 @@
 
 :root {
   --radius: 0.75rem;
-  --background: oklch(0.975 0.014 92);
-  --foreground: oklch(0.24 0.04 155);
-  --cream: oklch(0.955 0.025 90);
-  --card: oklch(0.995 0.006 95);
-  --card-foreground: oklch(0.24 0.04 155);
-  --popover: oklch(0.995 0.006 95);
-  --popover-foreground: oklch(0.24 0.04 155);
-  --primary: oklch(0.42 0.095 152);
-  --primary-deep: oklch(0.3 0.07 155);
-  --primary-foreground: oklch(0.98 0.015 95);
-  --secondary: oklch(0.93 0.035 135);
-  --secondary-foreground: oklch(0.3 0.07 155);
-  --muted: oklch(0.94 0.018 95);
-  --muted-foreground: oklch(0.5 0.03 150);
-  --accent: oklch(0.92 0.04 140);
-  --accent-foreground: oklch(0.3 0.07 155);
-  --destructive: oklch(0.57 0.2 27);
-  --destructive-foreground: oklch(0.98 0.01 95);
-  --sale: oklch(0.74 0.15 65);
-  --sale-foreground: oklch(0.25 0.05 55);
-  --whatsapp: oklch(0.62 0.16 150);
-  --whatsapp-foreground: oklch(0.99 0.01 150);
-  --border: oklch(0.9 0.02 110);
-  --input: oklch(0.88 0.02 110);
-  --ring: oklch(0.55 0.1 152);
+  --background: #ffffff;
+  --foreground: #18241a;
+  --cream: #f8fafc;
+  --card: #ffffff;
+  --card-foreground: #18241a;
+  --popover: #ffffff;
+  --popover-foreground: #18241a;
+  --primary: #185c37;
+  --primary-deep: #14401a;
+  --primary-foreground: #ffffff;
+  --secondary: #e3f1e3;
+  --secondary-foreground: #185c37;
+  --muted: #f3f4f6;
+  --muted-foreground: #5c6c60;
+  --accent: #e3f1e3;
+  --accent-foreground: #185c37;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --sale: #f59e0b;
+  --sale-foreground: #1c1917;
+  --whatsapp: #25d366;
+  --whatsapp-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #185c37;
 
-  --gradient-hero: linear-gradient(100deg, oklch(0.26 0.06 155 / 0.95) 0%, oklch(0.3 0.07 155 / 0.75) 45%, oklch(0.3 0.07 155 / 0) 80%);
-  --shadow-sm: 0 1px 2px oklch(0.3 0.07 155 / 0.08), 0 8px 24px -10px oklch(0.4 0.09 152 / 0.18);
-  --shadow-md: 0 2px 4px oklch(0.3 0.07 155 / 0.08), 0 16px 30px -12px oklch(0.4 0.09 152 / 0.26);
-  --shadow-lg: 0 4px 8px oklch(0.3 0.07 155 / 0.1), 0 28px 48px -16px oklch(0.35 0.09 152 / 0.38);
+  --gradient-hero: linear-gradient(100deg, rgba(20, 64, 26, 0.95) 0%, rgba(20, 64, 26, 0.75) 45%, rgba(20, 64, 26, 0) 80%);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(24, 92, 55, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 12px 24px -6px rgba(24, 92, 55, 0.12);
+  --shadow-lg: 0 10px 24px -4px rgba(0, 0, 0, 0.1), 0 20px 40px -8px rgba(24, 92, 55, 0.16);
   --shadow-card: var(--shadow-sm);
   --shadow-lift: var(--shadow-lg);
-  --shadow-sheet: 0 -16px 48px -12px oklch(0.2 0.05 155 / 0.35);
-  --shadow-bar: 0 6px 20px -10px oklch(0.3 0.07 155 / 0.28);
-  --gradient-sheen: radial-gradient(120% 80% at 30% 15%, oklch(1 0 0 / 0.55), transparent 55%), linear-gradient(160deg, oklch(0.97 0.03 120), oklch(0.93 0.04 140));
+  --shadow-sheet: 0 -16px 48px -12px rgba(20, 64, 26, 0.25);
+  --shadow-bar: 0 4px 20px -4px rgba(0, 0, 0, 0.08);
+  --gradient-sheen: radial-gradient(120% 80% at 30% 15%, rgba(255, 255, 255, 0.7), transparent 55%), linear-gradient(160deg, #f0fdf4, #e8f5e9);
+}
+
+.dark {
+  --background: #11161b;
+  --foreground: #f9fafb;
+  --cream: #18221d;
+  --card: #18221d;
+  --card-foreground: #f9fafb;
+  --popover: #18221d;
+  --popover-foreground: #f9fafb;
+  --primary: #2b8a35;
+  --primary-deep: #4ade80;
+  --primary-foreground: #ffffff;
+  --secondary: #22332a;
+  --secondary-foreground: #86efac;
+  --muted: #1e2922;
+  --muted-foreground: #9ca3af;
+  --accent: #22332a;
+  --accent-foreground: #86efac;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --sale: #f59e0b;
+  --sale-foreground: #1c1917;
+  --whatsapp: #25d366;
+  --whatsapp-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #4ade80;
+
+  --gradient-hero: linear-gradient(100deg, rgba(17, 22, 27, 0.95) 0%, rgba(24, 34, 29, 0.8) 50%, rgba(17, 22, 27, 0) 80%);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.65);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lift: 0 16px 36px rgba(0, 0, 0, 0.65);
+  --shadow-sheet: 0 -16px 48px rgba(0, 0, 0, 0.7);
+  --shadow-bar: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --gradient-sheen: radial-gradient(120% 80% at 30% 15%, rgba(255, 255, 255, 0.15), transparent 55%), linear-gradient(160deg, #18221d, #141c18);
 }
 
 @layer base {
@@ -185,4 +223,9 @@
   .shimmer::after {
     animation: none;
   }
+}
+
+@utility card-intrinsic {
+  content-visibility: auto;
+  contain-intrinsic-size: 280px;
 }

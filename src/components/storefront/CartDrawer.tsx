@@ -2,14 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  AlertTriangle,
-  MessageCircle,
-  Minus,
-  Plus,
-  ShoppingBasket,
-  Trash2,
-} from "lucide-react";
+import { AlertTriangle, MessageCircle, Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { BottomSheet } from "./BottomSheet";
 import { ProductImage } from "./ProductImage";
@@ -38,9 +31,15 @@ const TIMES = [
 ];
 const FORM_KEY = "mg_pickup_form";
 
-export function CartDrawer({ settings }: { settings: ShopSettings | null }) {
+export function CartDrawer({
+  settings,
+  products: initialProducts = null,
+}: {
+  settings: ShopSettings | null;
+  products?: Product[] | null;
+}) {
   const { open, setOpen, lines, setQty, remove, replaceLines, clear } = useCart();
-  const [products, setProducts] = useState<Product[] | null>(null);
+  const [products, setProducts] = useState<Product[] | null>(initialProducts);
   const [priceUpdated, setPriceUpdated] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ name: "", phone: "", time: "" });
   const [touched, setTouched] = useState(false);
@@ -70,10 +69,16 @@ export function CartDrawer({ settings }: { settings: ShopSettings | null }) {
       setProducts(list);
       const changed = new Set<string>();
       const next = lines.map((l) => {
-        const p = list.find((x) => x.id === l.productId);
+        const p = list.find((x) => String(x.id) === String(l.productId));
         if (p && p.price !== l.priceSnapshot) {
           changed.add(l.productId);
-          return { ...l, priceSnapshot: p.price };
+          return {
+            ...l,
+            priceSnapshot: p.price,
+            name: p.name,
+            unit: p.unit,
+            image: p.image,
+          };
         }
         return l;
       });
@@ -85,21 +90,39 @@ export function CartDrawer({ settings }: { settings: ShopSettings | null }) {
     };
   }, [open]);
 
-  const rows = useMemo(
-    () =>
-      lines.map((line) => ({
-        line,
-        product: products?.find((p) => p.id === line.productId) ?? null,
-      })),
-    [lines, products],
-  );
+  const activeProducts = products || initialProducts;
 
-  const blocked = rows.filter((r) => !r.product || !r.product.inStock);
-  const valid = rows.filter(
-    (r): r is { line: typeof r.line; product: Product } =>
-      !!r.product && r.product.inStock,
+  const rows = useMemo(() => {
+    return lines.map((line) => {
+      const p = activeProducts?.find((x) => String(x.id) === String(line.productId)) ?? null;
+      const effectivePrice = p?.price !== undefined ? p.price : (line.priceSnapshot ?? null);
+      const effectiveUnit = p?.unit || line.unit || "kg";
+      const effectiveName = p?.name || line.name || "Item";
+      const effectiveImage = p?.image || line.image || null;
+      const isAvailable = p ? p.inStock : true;
+
+      return {
+        line,
+        product: p,
+        effectivePrice,
+        effectiveUnit,
+        effectiveName,
+        effectiveImage,
+        isAvailable,
+      };
+    });
+  }, [lines, activeProducts]);
+
+  const blocked = rows.filter((r) => r.product && !r.product.inStock);
+  const valid = rows.filter((r) => r.isAvailable);
+
+  const est = estimate(
+    valid.map((r) => ({
+      price: r.effectivePrice,
+      qty: r.line.qty,
+      unit: r.effectiveUnit,
+    })),
   );
-  const est = estimate(valid.map((r) => ({ price: r.product.price, qty: r.line.qty })));
 
   const errors = {
     name: form.name.trim().length < 2 ? "Please enter your name" : "",
@@ -107,18 +130,35 @@ export function CartDrawer({ settings }: { settings: ShopSettings | null }) {
     time: form.time ? "" : "Choose a pick-up time",
   };
   const hasErrors = Object.values(errors).some(Boolean);
-  const canSend = !!(products && lines.length > 0 && blocked.length === 0 && settings);
+  const canSend = !!(lines.length > 0 && blocked.length === 0 && settings);
 
   function send() {
     setTouched(true);
     if (hasErrors || !canSend || !settings) return;
+
+    const itemsForWhatsApp = valid.map((r) => ({
+      product: r.product ?? {
+        id: r.line.productId,
+        plu: r.line.productId,
+        name: r.effectiveName,
+        category: "Vegetables" as const,
+        unit: r.effectiveUnit,
+        mrp: null,
+        discount: 0,
+        price: r.effectivePrice,
+        inStock: true,
+      },
+      line: r.line,
+    }));
+
     const msg = buildWhatsAppMessage({
       settings,
       name: form.name.trim(),
       phone: form.phone,
       time: form.time,
-      items: valid,
+      items: itemsForWhatsApp,
     });
+
     window.open(whatsappUrl(settings.whatsapp, msg), "_blank", "noopener,noreferrer");
     toast.success("Opening WhatsApp…", {
       description: "Send the message to confirm your pick-up.",
@@ -137,13 +177,13 @@ export function CartDrawer({ settings }: { settings: ShopSettings | null }) {
         lines.length > 0 ? (
           <div className="space-y-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-sm text-muted-foreground">Estimated total</span>
+              <span className="text-sm font-medium text-muted-foreground">Estimated total</span>
               <span className="text-lg font-bold text-primary-deep">
                 {rupee(est.total)}
                 {est.storePriced > 0 && (
                   <span className="text-sm font-medium text-muted-foreground">
                     {" "}
-                    + store-priced items
+                    + {est.storePriced} store-priced item{est.storePriced > 1 ? "s" : ""}
                   </span>
                 )}
               </span>
@@ -179,34 +219,31 @@ export function CartDrawer({ settings }: { settings: ShopSettings | null }) {
         <>
           <ul className="flex flex-col gap-2">
             <AnimatePresence initial={false}>
-              {rows.map(({ line, product: p }) => {
-                const gone = !p;
-                const oos = p && !p.inStock;
-                const total = p ? lineTotal(p.price, line.qty) : null;
+              {rows.map((row) => {
+                const { line } = row;
+                const oos = !row.isAvailable;
+                const total = lineTotal(row.effectivePrice, line.qty, row.effectiveUnit);
+
                 return (
                   <motion.li
                     key={line.productId}
-                    layout
-                    initial={{ opacity: 0, x: 24 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -40, transition: { duration: 0.2 } }}
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -30, transition: { duration: 0.15 } }}
                     className={cn(
                       "overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card",
-                      (gone || oos) && "ring-1 ring-destructive/50",
+                      oos && "ring-1 ring-destructive/50",
                     )}
                   >
                     <div className="flex gap-3 p-3">
                       <ProductImage
-                        src={p?.image}
-                        alt={p?.name ?? "Removed item"}
+                        src={row.effectiveImage}
+                        alt={row.effectiveName}
                         className="h-16 w-16 shrink-0 rounded-xl"
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="truncate font-semibold">
-                            {p?.name ?? "Item no longer available"}
-                          </p>
+                          <p className="truncate font-semibold">{row.effectiveName}</p>
                           <button
                             type="button"
                             onClick={() => remove(line.productId)}
@@ -216,14 +253,17 @@ export function CartDrawer({ settings }: { settings: ShopSettings | null }) {
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                        {gone || oos ? (
+
+                        {oos ? (
                           <p className="flex items-center gap-1 text-xs font-medium text-destructive">
                             <AlertTriangle className="h-3.5 w-3.5" />
-                            {gone ? "Removed from the shop" : "Out of stock now"} — please remove
+                            Out of stock now — please remove
                           </p>
                         ) : (
                           <p className="text-xs text-muted-foreground">
-                            {p!.price != null ? unitPrice(p!.price, p!.unit) : "Price at store"}
+                            {row.effectivePrice != null
+                              ? unitPrice(row.effectivePrice, row.effectiveUnit)
+                              : "Price at store"}
                             {priceUpdated.has(line.productId) && (
                               <span className="ml-1.5 rounded bg-sale/20 px-1.5 py-0.5 font-medium text-sale-foreground">
                                 price updated
@@ -231,36 +271,43 @@ export function CartDrawer({ settings }: { settings: ShopSettings | null }) {
                             )}
                           </p>
                         )}
-                        {p && !oos && (
-                          <div className="mt-1 flex items-center justify-between">
+
+                        {!oos && (
+                          <div className="mt-2 flex items-center justify-between">
                             <div className="flex items-center rounded-xl bg-secondary">
                               <motion.button
                                 whileTap={{ scale: 0.85 }}
                                 aria-label="Decrease"
                                 onClick={() =>
-                                  setQty(p.id, +(line.qty - stepFor(p.unit)).toFixed(2))
+                                  setQty(
+                                    line.productId,
+                                    +(line.qty - stepFor(row.effectiveUnit)).toFixed(2),
+                                  )
                                 }
-                                className="flex h-11 w-11 items-center justify-center cursor-pointer"
+                                className="flex h-10 w-10 items-center justify-center cursor-pointer"
                               >
                                 <Minus className="h-4 w-4" />
                               </motion.button>
                               <AnimatedQty
                                 value={line.qty}
-                                label={formatQty(line.qty, p.unit)}
+                                label={formatQty(line.qty, row.effectiveUnit)}
                                 className="min-w-14 text-sm font-semibold"
                               />
                               <motion.button
                                 whileTap={{ scale: 0.85 }}
                                 aria-label="Increase"
                                 onClick={() =>
-                                  setQty(p.id, +(line.qty + stepFor(p.unit)).toFixed(2))
+                                  setQty(
+                                    line.productId,
+                                    +(line.qty + stepFor(row.effectiveUnit)).toFixed(2),
+                                  )
                                 }
-                                className="flex h-11 w-11 items-center justify-center cursor-pointer"
+                                className="flex h-10 w-10 items-center justify-center cursor-pointer"
                               >
                                 <Plus className="h-4 w-4" />
                               </motion.button>
                             </div>
-                            <span className="font-semibold text-primary-deep">
+                            <span className="font-semibold text-primary-deep text-sm">
                               {total != null ? rupee(total) : "At store"}
                             </span>
                           </div>

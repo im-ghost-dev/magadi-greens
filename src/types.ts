@@ -77,4 +77,7 @@ export interface CartLine {
   qty: number;
   /** price seen when added / last recalculated, used to detect changes */
   priceSnapshot: number | null;
+  name?: string;
+  unit?: Unit;
+  image?: string | null;
 }
