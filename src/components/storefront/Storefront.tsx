@@ -9,6 +9,7 @@ import { SpecialsCarousel } from "./SpecialsCarousel";
 import { CategoryChips } from "./CategoryChips";
 import { ProductCard, ProductCardSkeleton } from "./ProductCard";
 import { CartDrawer } from "./CartDrawer";
+import { FloatingCartBar } from "./FloatingCartBar";
 import { ContactSection } from "./ContactSection";
 import { AdminApp } from "@/components/admin/AdminApp";
 import { getProducts, getSettings, getSpecials, isAdmin } from "@/lib/api";
@@ -105,7 +106,7 @@ export function Storefront() {
           />
         </div>
 
-        <section className="mx-auto max-w-6xl px-4 py-4" aria-label="Products">
+        <section id="menu" className="mx-auto max-w-6xl px-4 py-4" aria-label="Products">
           {products === null ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -162,6 +163,11 @@ export function Storefront() {
         </footer>
       </motion.main>
 
+      <FloatingCartBar
+        title={settings?.shopName ?? "MAGADI GREENS"}
+        subtitle="View Menu"
+        subtitleHref="#menu"
+      />
       <CartDrawer settings={settings} />
     </div>
   );

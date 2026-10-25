@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { AmbientBackground } from "@/components/ui/AmbientBackground";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -45,10 +46,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${jakarta.variable} font-sans antialiased bg-background text-foreground`}
+        className={`${jakarta.variable} font-sans antialiased text-foreground`}
         style={{ fontFamily: "var(--font-jakarta), system-ui, sans-serif" }}
       >
-        {children}
+        <AmbientBackground>
+          {children}
+        </AmbientBackground>
         <Toaster />
         <SonnerToaster />
       </body>
