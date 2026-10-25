@@ -33,7 +33,7 @@ export function AmbientBackground({ className, children }: AmbientBackgroundProp
   return (
     <div
       className={cn(
-        "relative min-h-screen w-full overflow-x-hidden transition-colors duration-500",
+        "relative min-h-screen w-full overflow-x-clip transition-colors duration-500",
         "bg-[#f8fafc] dark:bg-[#0f1512] text-foreground",
         className,
       )}

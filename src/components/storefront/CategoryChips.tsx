@@ -68,9 +68,9 @@ export function CategoryChips<T extends string>({
         scrollbarWidth: "none",
         gap: "10px",
         maskImage:
-          "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
+          "linear-gradient(to right, black calc(100% - 24px), transparent 100%)",
         WebkitMaskImage:
-          "linear-gradient(to right, transparent 0%, black 16px, black calc(100% - 24px), transparent 100%)",
+          "linear-gradient(to right, black calc(100% - 24px), transparent 100%)",
       }}
       className={cn(
         "no-scrollbar mask-edge-fade flex gap-[10px] overflow-x-auto py-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",

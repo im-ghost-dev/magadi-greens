@@ -6,24 +6,38 @@ import { Moon, Search, ShoppingBasket, Sun, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useCart } from "@/hooks/useCart";
 
+interface HeaderProps {
+  shopName: string;
+  query: string;
+  onQuery: (q: string) => void;
+  onOpenAdmin: () => void;
+  children?: React.ReactNode;
+}
+
 export function Header({
   shopName,
   query,
   onQuery,
   onOpenAdmin,
   children,
-}: {
-  shopName: string;
-  query: string;
-  onQuery: (q: string) => void;
-  onOpenAdmin: () => void;
-  children?: React.ReactNode;
-}) {
-  const { count, bounce, setOpen } = useCart();
+}: HeaderProps) {
+  const { count, bounce, setOpen: setCartOpen } = useCart();
   const [isDark, setIsDark] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+
+  // DOM Refs
+  const rootRef = useRef<HTMLDivElement>(null);
+  const brandRef = useRef<HTMLDivElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
+  const fieldRef = useRef<HTMLLabelElement>(null);
+  const dockRef = useRef<HTMLElement>(null);
+  const idleRef = useRef<HTMLDivElement>(null);
+  const overRef = useRef<HTMLDivElement>(null);
+  const openBtnRef = useRef<HTMLButtonElement>(null);
+  const q1Ref = useRef<HTMLInputElement>(null);
+  const q2Ref = useRef<HTMLInputElement>(null);
+
+  const isOpenRef = useRef(false);
+  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 1. Theme sync with localStorage & classList
   useEffect(() => {
@@ -53,7 +67,7 @@ export function Header({
     }
   }
 
-  // 2. Secret 5-tap gesture detection on store logo
+  // 2. Secret 5-tap gesture detection on store logo to open admin
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,217 +85,305 @@ export function Header({
     }
   };
 
-  // 3. Scroll Hysteresis Listener: collapse at > 55px, expand back at < 15px
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const y = window.scrollY || window.pageYOffset || 0;
-          if (!isSearchExpanded) {
-            setIsScrolled((prev) => (y > 55 ? true : y < 15 ? false : prev));
-          }
-          ticking = false;
-        });
-        ticking = true;
+  // 3. Open / close dock search overlay
+  function setDockOpen(open: boolean, focus = true) {
+    if (isOpenRef.current === open) return;
+    isOpenRef.current = open;
+
+    const dock = dockRef.current;
+    const over = overRef.current;
+    const idle = idleRef.current;
+    const openBtn = openBtnRef.current;
+    const root = rootRef.current;
+    const q2 = q2Ref.current;
+
+    if (dock) dock.dataset.open = String(open);
+    if (over) (over as HTMLElement & { inert: boolean }).inert = !open;
+    if (idle) (idle as HTMLElement & { inert: boolean }).inert = open;
+    if (openBtn && root) {
+      const iVal = parseFloat(getComputedStyle(root).getPropertyValue("--i") || "0");
+      (openBtn as HTMLElement & { inert: boolean }).inert = open || iVal < 0.7;
+    }
+
+    if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
+
+    if (open) {
+      if (focus && q2) {
+        focusTimerRef.current = setTimeout(() => {
+          q2.focus({ preventScroll: true });
+        }, 230);
       }
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isSearchExpanded]);
+    } else {
+      if (q2) q2.blur();
+      if (focus && openBtn) {
+        openBtn.focus({ preventScroll: true });
+      }
+    }
+  }
 
-  // Determine if header is in compact sticky mode (circular search icon + category chips on 1 row)
-  const isCompact = isScrolled && !isSearchExpanded && !query;
-
-  // Handle clicking the morphed search icon when scrolled down
-  const handleSearchIconClick = () => {
-    setIsSearchExpanded(true);
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 60);
-  };
-
-  // Handle closing / canceling expanded search
-  const handleCancelSearch = () => {
-    setIsSearchExpanded(false);
+  // Handle Cancel / Escape
+  function handleCancel() {
     onQuery("");
-  };
+    setDockOpen(false);
+  }
+
+  // 4. Scroll Scrubbed Animation Listener
+  useEffect(() => {
+    const root = rootRef.current;
+    const brand = brandRef.current;
+    const row = rowRef.current;
+    const dock = dockRef.current;
+    const idle = idleRef.current;
+    const over = overRef.current;
+    const field = fieldRef.current;
+    const openBtn = openBtnRef.current;
+    const q2 = q2Ref.current;
+
+    if (!root || !brand || !row || !dock || !idle || !over || !field || !openBtn) return;
+
+    let stickAt = 0;
+    let range = 1;
+    let ticking = false;
+
+    const clamp = (v: number) => Math.min(1, Math.max(0, v));
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+
+    // Measure fixed heights (never changes while scrolling)
+    function measure() {
+      if (!brand || !row) return;
+      stickAt = brand.offsetHeight + row.offsetHeight; // scrollY at which chip row hits top
+      range = Math.max(1, stickAt - 16); // finish morph slightly before that
+    }
+
+    function update() {
+      ticking = false;
+      const y = Math.max(0, window.scrollY || window.pageYOffset || 0);
+      const f = ease(clamp(y / (range * 0.7))); // field shrinks toward left
+      const i = ease(clamp((y - range * 0.4) / (range * 0.6))); // magnifier appears in dock
+      const s = clamp((y - (stickAt - 10)) / 10); // frosted background once stuck
+
+      root?.style.setProperty("--f", f.toFixed(3));
+      root?.style.setProperty("--i", i.toFixed(3));
+      root?.style.setProperty("--s", s.toFixed(3));
+
+      row?.classList.toggle("is-gone", f > 0.85);
+      if (field) (field as HTMLElement & { inert: boolean }).inert = f > 0.85;
+      if (openBtn) {
+        (openBtn as HTMLElement & { inert: boolean }).inert = i < 0.7 || isOpenRef.current;
+      }
+
+      // Back at the top with nothing typed: put the overlay away
+      if (isOpenRef.current && y < 8 && !q2?.value) {
+        setDockOpen(false, false);
+      }
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }
+
+    function handleResize() {
+      measure();
+      update();
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", handleResize);
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        measure();
+        update();
+      });
+    }
+
+    (over as HTMLElement & { inert: boolean }).inert = true;
+    measure();
+    update();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", handleResize);
+      if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
+    };
+  }, []);
+
+  // 5. Escape key to close dock search
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && isOpenRef.current) {
+        handleCancel();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
-    <header
-      className="sticky top-0 z-50 w-full"
-      style={{
-        background: isDark ? "rgba(15, 21, 18, 0.82)" : "rgba(248, 250, 252, 0.82)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderBottom: isDark
-          ? "1px solid rgba(255, 255, 255, 0.08)"
-          : "1px solid rgba(0, 0, 0, 0.08)",
-        transition: "all 360ms cubic-bezier(0.22, 1, 0.36, 1)",
-      }}
-    >
-      <div
-        className="mx-auto max-w-6xl"
-        style={{
-          padding: isCompact ? "8px 16px" : "12px 16px 8px 16px",
-          transition: "padding 360ms cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
+    <div className="cs w-full" id="cs" ref={rootRef}>
+      {/* ========================================================== */}
+      {/* 1. BRAND ROW (Fixed height 64px, scrolls away naturally)    */}
+      {/* ========================================================== */}
+      <header
+        className="brand mx-auto max-w-6xl px-4 flex h-16 items-center justify-between"
+        ref={brandRef}
       >
-        {/* ========================================================== */}
-        {/* ROW 1: BRAND BAR (Collapses smoothly when scrolled down)    */}
-        {/* ========================================================== */}
+        {/* Logo / Brand Name with secret 5-tap gesture */}
         <div
-          style={{
-            transition: "all 360ms cubic-bezier(0.22, 1, 0.36, 1)",
-            maxHeight: isCompact || (isScrolled && isSearchExpanded) ? "0px" : "56px",
-            opacity: isCompact || (isScrolled && isSearchExpanded) ? 0 : 1,
-            transform:
-              isCompact || (isScrolled && isSearchExpanded)
-                ? "translateY(-12px)"
-                : "translateY(0px)",
-            marginBottom: isCompact || (isScrolled && isSearchExpanded) ? "0px" : "10px",
-            pointerEvents: isCompact || (isScrolled && isSearchExpanded) ? "none" : "auto",
+          className="flex items-center cursor-pointer select-none"
+          onClick={handleLogoTap}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") onQuery("");
           }}
-          className="flex items-center justify-between overflow-hidden"
+          aria-label={shopName}
         >
-          {/* Logo / Brand with hidden 5-tap gesture */}
-          <div
-            className="flex items-center cursor-pointer select-none"
-            onClick={handleLogoTap}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") onQuery("");
-            }}
-            aria-label={shopName}
-          >
-            <Logo name={shopName} compact />
-          </div>
+          <Logo name={shopName} compact />
+        </div>
 
-          {/* Right Action Icons (Theme Toggle & Cart) */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Theme Toggle Button */}
+        {/* Right Action Icons: Theme Toggle & Cart */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Theme Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-card text-foreground shadow-xs hover:scale-105 active:scale-95 transition cursor-pointer"
+          >
+            {isDark ? (
+              <Sun className="h-4 w-4 text-amber-400" />
+            ) : (
+              <Moon className="h-4 w-4 text-primary-deep" />
+            )}
+          </button>
+
+          {/* Cart Button */}
+          <motion.button
+            type="button"
+            key={`cart-${bounce}`}
+            animate={bounce ? { scale: [1, 1.18, 0.94, 1] } : {}}
+            transition={{ duration: 0.45 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setCartOpen(true)}
+            aria-label={`Open pick-up list, ${count} items`}
+            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-elev-md hover:scale-105 transition cursor-pointer"
+          >
+            <ShoppingBasket className="h-4 w-4" id="cart-badge-target" />
+            {count > 0 && (
+              <motion.span
+                key={count}
+                initial={{ scale: 0.4, y: 6, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 600, damping: 14 }}
+                className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sale px-1 text-[10px] font-bold text-sale-foreground ring-1 ring-background"
+              >
+                {count}
+              </motion.span>
+            )}
+          </motion.button>
+        </div>
+      </header>
+
+      {/* ========================================================== */}
+      {/* 2. SEARCH ROW (Fixed height 56px, scrolls away naturally)   */}
+      {/* ========================================================== */}
+      <div className="cs-row mx-auto max-w-6xl px-4" id="csRow" ref={rowRef}>
+        <label className="cs-field" id="csField" ref={fieldRef}>
+          <Search className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+          <input
+            id="q1"
+            ref={q1Ref}
+            type="search"
+            value={query}
+            onChange={(e) => onQuery(e.target.value)}
+            placeholder="Search tomatoes, spinach, mango…"
+            aria-label="Search products"
+            autoComplete="off"
+          />
+          {query && (
             <button
               type="button"
-              onClick={toggleTheme}
-              aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-white dark:bg-[#18221d] text-foreground shadow-xs hover:scale-105 active:scale-95 transition cursor-pointer"
+              onClick={() => onQuery("")}
+              aria-label="Clear search"
+              className="mr-3 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground cursor-pointer"
             >
-              {isDark ? (
-                <Sun className="h-4 w-4 text-amber-400" />
-              ) : (
-                <Moon className="h-4 w-4 text-primary-deep" />
-              )}
+              <X className="h-4 w-4" />
             </button>
+          )}
+        </label>
+      </div>
 
-            {/* Cart Button */}
-            <motion.button
-              type="button"
-              key={`cart-${bounce}`}
-              animate={bounce ? { scale: [1, 1.18, 0.94, 1] } : {}}
-              transition={{ duration: 0.45 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setOpen(true)}
-              aria-label={`Open pick-up list, ${count} items`}
-              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-elev-md hover:scale-105 transition cursor-pointer"
-            >
-              <ShoppingBasket className="h-4 w-4" id="cart-badge-target" />
-              {count > 0 && (
-                <motion.span
-                  key={count}
-                  initial={{ scale: 0.4, y: 6, opacity: 0 }}
-                  animate={{ scale: 1, y: 0, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 600, damping: 14 }}
-                  className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sale px-1 text-[10px] font-bold text-sale-foreground ring-1 ring-background"
-                >
-                  {count}
-                </motion.span>
-              )}
-            </motion.button>
-          </div>
-        </div>
-
-        {/* ========================================================== */}
-        {/* ROW 2 & 3: ANIMATED SEARCH MORPH & FLOATING CATEGORY ROW   */}
-        {/* ========================================================== */}
-        <div
-          className="flex flex-wrap items-center gap-2.5 w-full"
-          style={{
-            transition: "all 360ms cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-        >
-          {/* Search Container (Morphs between full pill and 42px circular icon) */}
-          <div
-            style={{
-              transition: "all 360ms cubic-bezier(0.22, 1, 0.36, 1)",
-              flex: isCompact ? "0 0 42px" : "1 1 100%",
-              width: isCompact ? "42px" : "100%",
-              maxWidth: isCompact ? "42px" : "100%",
-            }}
-            className="h-[42px] shrink-0"
-          >
-            {isCompact ? (
-              // Collapsed Circular Search Button (42px x 42px with 9999px border-radius)
+      {/* ========================================================== */}
+      {/* 3. PINNED DOCK (Category Chips + Morphing Search Overlay)  */}
+      {/* ========================================================== */}
+      <nav
+        className="cs-dock"
+        id="csDock"
+        ref={dockRef}
+        data-open="false"
+        aria-label="Categories"
+      >
+        <div className="cs-dock-inner">
+          {/* Idle State: Magnifier slot + Horizontal Category Chips */}
+          <div className="cs-idle" id="csIdle" ref={idleRef}>
+            <div className="cs-slot">
               <button
                 type="button"
-                onClick={handleSearchIconClick}
-                aria-label="Open Search"
-                style={{ borderRadius: "9999px" }}
-                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full border border-black/10 dark:border-white/10 bg-white/90 dark:bg-[#18221d] text-foreground shadow-sm hover:scale-105 active:scale-95 transition cursor-pointer"
+                className="cs-icon"
+                id="csOpen"
+                ref={openBtnRef}
+                onClick={() => setDockOpen(true)}
+                aria-label="Open search"
+                tabIndex={0}
               >
-                <Search className="h-4 w-4 text-muted-foreground" />
+                <Search className="h-5 w-5 text-muted-foreground" aria-hidden />
               </button>
-            ) : (
-              // Full-Width Search Input Bar with Cancel button
-              <div className="relative flex h-[42px] w-full items-center">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={query}
-                  onChange={(e) => onQuery(e.target.value)}
-                  placeholder="Search tomatoes, spinach, mango…"
-                  aria-label="Search products"
-                  className="h-[42px] w-full rounded-full border border-black/10 dark:border-white/10 bg-white/95 dark:bg-[#18221d]/95 pl-10 pr-16 text-xs md:text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
-                />
-                {(query || (isScrolled && isSearchExpanded)) && (
-                  <button
-                    type="button"
-                    onClick={handleCancelSearch}
-                    aria-label="Cancel search"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/10 transition cursor-pointer"
-                  >
-                    {isScrolled && isSearchExpanded ? "Cancel" : <X className="h-3.5 w-3.5" />}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Floating Category Pills (Slides beside search icon when compact, or wraps below when expanded) */}
-          {children && (
-            <div
-              style={{
-                transition: "all 360ms cubic-bezier(0.22, 1, 0.36, 1)",
-                flex: isCompact
-                  ? isSearchExpanded
-                    ? "0 0 0px"
-                    : "1 1 0%"
-                  : "1 1 100%",
-                minWidth: 0,
-                opacity: isCompact && isSearchExpanded ? 0 : 1,
-                transform:
-                  isCompact && isSearchExpanded ? "translateX(20px)" : "translateX(0px)",
-                pointerEvents: isCompact && isSearchExpanded ? "none" : "auto",
-                overflow: isCompact && isSearchExpanded ? "hidden" : "visible",
-              }}
-              className="w-full"
-            >
+            </div>
+            <div className="cs-chips" role="tablist">
               {children}
             </div>
-          )}
+          </div>
+
+          {/* Active Overlay State: Expanded Search Field + Cancel Button */}
+          <div className="cs-over" id="csOver" ref={overRef}>
+            <label className="cs-ofield">
+              <Search className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+              <input
+                id="q2"
+                ref={q2Ref}
+                type="search"
+                value={query}
+                onChange={(e) => onQuery(e.target.value)}
+                placeholder="Search tomatoes, spinach, mango…"
+                aria-label="Search products"
+                autoComplete="off"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => onQuery("")}
+                  aria-label="Clear search"
+                  className="mr-3 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </label>
+            <button
+              type="button"
+              className="cs-cancel"
+              id="csCancel"
+              onClick={handleCancel}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-      </div>
-    </header>
+      </nav>
+    </div>
   );
 }

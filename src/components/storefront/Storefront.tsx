@@ -231,7 +231,7 @@ export function Storefront() {
   }
 
   return (
-    <div className="relative z-[1] min-h-screen" style={{ background: "transparent" }}>
+    <div className="relative z-[1] min-h-[150vh]" style={{ background: "transparent" }}>
       <Header
         shopName={settings?.shopName ?? "MAGADI GREENS"}
         query={query}
