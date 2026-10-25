@@ -40,7 +40,7 @@ export const ProductCard = React.memo(function ProductCard({
         "card-intrinsic group flex flex-col rounded-2xl border border-border/70 bg-card shadow-card transition-shadow duration-200",
         !out && "elevate-hover",
         out && "opacity-60 grayscale",
-        isHighlighted && "animate-target-card-glow z-20 relative ring-2 ring-primary",
+        isHighlighted && "special-glow-highlight",
       )}
     >
       <div className="relative overflow-hidden rounded-t-2xl">
