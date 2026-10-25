@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, Moon, Search, ShoppingBasket, Sun, X } from "lucide-react";
+import { Moon, Search, ShoppingBasket, Sun, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useCart } from "@/hooks/useCart";
 import { useScrolled } from "@/hooks/useScrolled";
@@ -52,6 +52,30 @@ export function Header({
     }
   }
 
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleLogoTap = () => {
+    // Normal single-tap functionality: clear search query
+    onQuery("");
+
+    // Secret 5-tap gesture detection for store owner
+    tapCountRef.current += 1;
+
+    if (tapTimerRef.current) {
+      clearTimeout(tapTimerRef.current);
+    }
+
+    if (tapCountRef.current >= 5) {
+      tapCountRef.current = 0;
+      onOpenAdmin();
+    } else {
+      tapTimerRef.current = setTimeout(() => {
+        tapCountRef.current = 0;
+      }, 1500);
+    }
+  };
+
   return (
     <header
       className={cn(
@@ -62,7 +86,19 @@ export function Header({
       )}
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4">
-        <div className="flex items-center cursor-pointer" onClick={() => onQuery("")}>
+        {/* Store logo with hidden 5-tap admin gesture */}
+        <div
+          className="flex items-center cursor-pointer select-none"
+          onClick={handleLogoTap}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              onQuery("");
+            }
+          }}
+          aria-label={shopName}
+        >
           <Logo name={shopName} compact />
         </div>
         <div className="flex items-center gap-1.5">
@@ -78,19 +114,6 @@ export function Header({
             ) : (
               <Moon className="h-5 w-5 text-primary-deep" />
             )}
-          </button>
-
-          {/* Admin Button */}
-          <button
-            type="button"
-            onClick={onOpenAdmin}
-            aria-label="Admin"
-            className="flex h-11 items-center gap-1.5 rounded-full border border-border px-3 text-sm font-medium text-primary-deep transition hover:bg-secondary cursor-pointer"
-          >
-            <Lock className="h-4 w-4" />
-            <span className="hidden sm:inline">
-              {isAdminAuthed ? "Admin panel" : "Admin"}
-            </span>
           </button>
 
           {/* Cart Badge Button */}

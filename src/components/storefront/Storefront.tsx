@@ -43,6 +43,41 @@ export function Storefront() {
     loadData();
   }, []);
 
+  // URL Trigger: Open admin if ?admin=true, ?admin=1, or #admin is present
+  useEffect(() => {
+    const checkUrlForAdmin = () => {
+      if (typeof window === "undefined") return;
+      const params = new URLSearchParams(window.location.search);
+      const hasAdminQuery = params.get("admin") === "true" || params.get("admin") === "1";
+      const hasAdminHash = window.location.hash.toLowerCase() === "#admin";
+
+      if (hasAdminQuery || hasAdminHash) {
+        setView("admin");
+      }
+    };
+
+    checkUrlForAdmin();
+    window.addEventListener("hashchange", checkUrlForAdmin);
+    window.addEventListener("popstate", checkUrlForAdmin);
+    return () => {
+      window.removeEventListener("hashchange", checkUrlForAdmin);
+      window.removeEventListener("popstate", checkUrlForAdmin);
+    };
+  }, []);
+
+  // Desktop Keyboard Shortcut: Ctrl + Shift + A (or Cmd + Shift + A) to toggle Admin
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "a" || e.key === "A")) {
+        e.preventDefault();
+        setView((curr) => (curr === "admin" ? "store" : "admin"));
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const activeSpecialCleanupRef = useRef<(() => void) | null>(null);
 
   function handleSelectSpecial(special: Special) {
@@ -358,14 +393,18 @@ export function Storefront() {
         <footer className="mx-auto max-w-6xl px-4 pb-10 pt-6">
           {settings && <ContactSection settings={settings} />}
           <div className="mt-6 flex flex-col items-center gap-1.5 text-center text-xs text-muted-foreground">
-            <p>© {settings?.shopName ?? "MAGADI GREENS"}</p>
-            <button
-              type="button"
-              onClick={() => setView("admin")}
-              className="font-medium text-primary hover:underline cursor-pointer"
-            >
-              Shopkeeper Admin Login
-            </button>
+            <p className="flex items-center gap-1 select-none">
+              <span>© {settings?.shopName ?? "MAGADI GREENS"}</span>
+              {/* Discrete footer trigger: double-click subtle dot to open admin */}
+              <span
+                onDoubleClick={() => setView("admin")}
+                title=""
+                className="inline-block px-1 opacity-25 hover:opacity-60 transition-opacity cursor-default select-none"
+                aria-hidden="true"
+              >
+                •
+              </span>
+            </p>
           </div>
         </footer>
       </motion.main>
