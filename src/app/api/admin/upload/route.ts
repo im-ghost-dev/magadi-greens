@@ -1,19 +1,26 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/catalogue";
-import { photoDir, photoUrl } from "@/lib/photos";
-import { writeFile, mkdir } from "node:fs/promises";
-import path from "node:path";
+import { uploadPublic, productPhotoKey } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-const MAX_BYTES = 8 * 1024 * 1024; // 8 MB after the browser has resized the photo
+const MAX_BYTES = 4 * 1024 * 1024; // 4 MB after the browser has resized + WebP'd the photo
+
+/** WebP magic bytes: "RIFF"...."WEBP". */
+function isWebp(b: Uint8Array): boolean {
+  return (
+    b.length > 12 &&
+    b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && // RIFF
+    b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50 // WEBP
+  );
+}
 
 /**
  * POST /api/admin/upload
- * Multipart form data: { file: File, id: string }
- * Saves the image to the photo directory (see lib/photos.ts) and updates the
- * product's `img` field to /api/photos/{id}?v=<timestamp>. Returns the new URL.
+ * Multipart form data: { file: File (WebP), id: string }
+ * Uploads the image to Supabase Storage and stores the public URL on the
+ * product's `img` field. Returns the new URL (cache-busted with ?v=).
  */
 export async function POST(req: Request) {
   if (!(await requireAdmin())) {
@@ -36,7 +43,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing or invalid product id" }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "Image is too large (max 8 MB)" }, { status: 400 });
+    return NextResponse.json({ error: "Image is too large (max 4 MB)" }, { status: 400 });
   }
 
   const product = await db.product.findUnique({ where: { id } });
@@ -45,21 +52,21 @@ export async function POST(req: Request) {
   }
 
   const bytes = new Uint8Array(await file.arrayBuffer());
-  // JPEG files start with FF D8 FF. The browser always sends JPEG, so reject anything else.
-  if (bytes.length < 3 || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) {
-    return NextResponse.json({ error: "Please upload a JPG or PNG photo" }, { status: 400 });
+  if (!isWebp(bytes)) {
+    return NextResponse.json({ error: "Please upload a WebP photo (the app converts automatically)." }, { status: 400 });
   }
 
+  let imgUrl: string;
   try {
-    const dir = photoDir();
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, `${id}.jpg`), bytes);
+    imgUrl = await uploadPublic(productPhotoKey(id), bytes, "image/webp");
   } catch (e) {
-    console.error("Photo write failed:", e);
-    return NextResponse.json({ error: "The server couldn't save the photo. Check folder permissions." }, { status: 500 });
+    console.error("Photo upload failed:", e);
+    return NextResponse.json(
+      { error: "The server couldn't save the photo. Check the Supabase Storage config." },
+      { status: 500 },
+    );
   }
 
-  const imgUrl = photoUrl(id);
   await db.product.update({ where: { id }, data: { img: imgUrl } });
   return NextResponse.json({ ok: true, img: imgUrl });
 }

@@ -1,50 +1,51 @@
 "use client";
 
-import { emojiFor, fmtQty, hasDeal, pct, rupee, stepOf, maxOf, UNIT_INFO, type Product } from "@/lib/catalogue-client";
+import { motion } from "framer-motion";
+import { fmtQty, hasDeal, pct, rupee, stepOf, maxOf, UNIT_INFO, type Product } from "@/lib/catalogue-client";
 import { useCart } from "@/store/useCart";
+import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { flyToCart } from "@/lib/fly-to-cart";
+import { ProductThumb } from "./ProductThumb";
 import { Minus, Plus } from "lucide-react";
+import { useRef } from "react";
 
-export function ProductCard({ p }: { p: Product }) {
+export function ProductCard({ p, index = 0 }: { p: Product; index?: number }) {
   const cart = useCart((s) => s.cart);
   const add = useCart((s) => s.add);
   const sub = useCart((s) => s.sub);
   const qty = cart[p.id] ?? 0;
   const deal = hasDeal(p);
+  const reduce = useReducedMotion();
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  /** Add to cart, with the fly-to-cart animation from the product image. */
+  const addWithFly = () => {
+    add(p.id, stepOf(p), maxOf(p));
+    if (!reduce) flyToCart(imgRef.current, p.img);
+  };
 
   return (
-    <article
-      className={`flex flex-col rounded-2xl border border-border bg-white p-3 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-g900/10 ${
+    <motion.article
+      initial={reduce ? false : { opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.4) }}
+      whileHover={reduce ? undefined : { y: -3 }}
+      className={`flex flex-col rounded-2xl border border-border bg-white p-3 shadow-sm shadow-g900/5 transition-shadow hover:shadow-lg hover:shadow-g900/10 ${
         p.stock ? "" : "opacity-65"
       }`}
     >
-      <div className="relative grid h-[110px] place-items-center overflow-hidden rounded-xl bg-g50 text-[56px]">
+      <div ref={imgRef} className="relative grid h-[110px] place-items-center overflow-hidden rounded-xl">
         {deal && (
-          <span className="absolute left-2 top-2 rounded-full bg-badge px-2 py-0.5 text-[11px] font-bold text-white">
+          <span className="absolute left-2 top-2 z-10 rounded-full bg-badge px-2 py-0.5 text-[11px] font-bold text-white">
             {pct(p)}% off
           </span>
         )}
         {!p.stock && (
-          <span className="absolute right-2 top-2 rounded-full bg-[#fde4e4] px-2 py-0.5 text-[11px] font-bold text-[#b42318]">
+          <span className="absolute right-2 top-2 z-10 rounded-full bg-[#fde4e4] px-2 py-0.5 text-[11px] font-bold text-[#b42318]">
             Out of stock
           </span>
         )}
-        {p.img ? (
-          <img
-            src={p.img}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="size-full object-cover"
-            onError={(e) => {
-              const img = e.currentTarget;
-              const span = document.createElement("span");
-              span.textContent = emojiFor(p.name, p.cat);
-              img.replaceWith(span);
-            }}
-          />
-        ) : (
-          <span>{emojiFor(p.name, p.cat)}</span>
-        )}
+        <ProductThumb src={p.img} alt={p.name} className="size-full" big />
       </div>
 
       <div className="mt-2.5 text-[11.5px] text-mute">{p.kn || "\u00A0"}</div>
@@ -90,7 +91,7 @@ export function ProductCard({ p }: { p: Product }) {
               {fmtQty(p, qty)}
             </span>
             <button
-              onClick={() => add(p.id, stepOf(p), maxOf(p))}
+              onClick={addWithFly}
               aria-label={`Add one ${p.name}`}
               className="grid h-full w-11 place-items-center text-xl font-bold text-g700 hover:bg-g100"
             >
@@ -98,15 +99,16 @@ export function ProductCard({ p }: { p: Product }) {
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => add(p.id, stepOf(p), maxOf(p))}
+          <motion.button
+            onClick={addWithFly}
             aria-label={`Add ${p.name}`}
-            className="h-10 w-full rounded-xl bg-g600 text-sm font-bold text-white transition-colors hover:bg-g700 active:scale-[.97]"
+            whileTap={reduce ? undefined : { scale: 0.94 }}
+            className="h-10 w-full rounded-xl bg-g600 text-sm font-bold text-white transition-colors hover:bg-g700"
           >
             Add
-          </button>
+          </motion.button>
         )}
       </div>
-    </article>
+    </motion.article>
   );
 }

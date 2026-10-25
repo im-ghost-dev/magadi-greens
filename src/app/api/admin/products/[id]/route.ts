@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/catalogue";
+import { removePublic, productPhotoKey } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -19,5 +20,7 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
   } catch {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+  // Best-effort: remove the product's photo from Supabase Storage.
+  await removePublic(productPhotoKey(num)).catch(() => {});
   return NextResponse.json({ ok: true });
 }

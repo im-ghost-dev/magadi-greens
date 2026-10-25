@@ -1,6 +1,7 @@
 "use client";
 
 import { Settings, Search, ShoppingBag, Phone, MapPin } from "lucide-react";
+import { telHref, type Settings as ShopSettings } from "@/lib/settings";
 
 type Props = {
   cartCount: number;
@@ -10,6 +11,7 @@ type Props = {
   view: "store" | "admin";
   onSwitchView: (v: "store" | "admin") => void;
   adminStatus: "unknown" | "checking" | "authed" | "guest";
+  settings: ShopSettings;
 };
 
 export function Header({
@@ -20,6 +22,7 @@ export function Header({
   view,
   onSwitchView,
   adminStatus,
+  settings,
 }: Props) {
   return (
     <>
@@ -31,11 +34,11 @@ export function Header({
             it ready.
           </span>
           <a
-            href="tel:+919148112233"
+            href={telHref(settings.phone)}
             className="underline underline-offset-2 hover:text-g100"
           >
             <Phone className="mr-1 inline size-3" />
-            Call the store: +91 91481 12233
+            Call the store: {settings.phone}
           </a>
         </div>
       </div>
@@ -57,10 +60,10 @@ export function Header({
             </span>
             <span className="leading-tight">
               <span className="block text-lg font-extrabold tracking-tight text-g900">
-                MAGADI GREENS
+                {settings.shopName}
               </span>
               <span className="block text-[11px] font-medium text-mute">
-                Farm fresh · Self pick-up
+                {settings.tagline}
               </span>
             </span>
           </a>
@@ -84,14 +87,16 @@ export function Header({
             </div>
           </label>
 
-          <a
-            href="https://maps.app.goo.gl/QN1YNYLwVPgDgvW86"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden items-center gap-1.5 rounded-full border border-border bg-cream px-3.5 py-2 text-[13px] font-semibold hover:bg-g50 md:inline-flex"
-          >
-            <MapPin className="size-4" /> Store location
-          </a>
+          {settings.mapsUrl && (
+            <a
+              href={settings.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden items-center gap-1.5 rounded-full border border-border bg-cream px-3.5 py-2 text-[13px] font-semibold hover:bg-g50 md:inline-flex"
+            >
+              <MapPin className="size-4" /> Store location
+            </a>
+          )}
 
           <button
             onClick={() => onSwitchView(view === "admin" ? "store" : "admin")}
@@ -117,6 +122,7 @@ export function Header({
             <ShoppingBag className="size-4" />
             <span className="hidden sm:inline">Pick-up list</span>
             <span
+              id="mg-cart-badge"
               key={cartCount}
               className={`grid min-w-5 place-items-center rounded-full bg-badge px-1.5 text-[11px] font-bold text-white ${
                 cartCount > 0 ? "mg-pop" : ""

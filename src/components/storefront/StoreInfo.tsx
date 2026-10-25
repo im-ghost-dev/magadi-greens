@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Clock, ShoppingBag, Send } from "lucide-react";
 import { toast } from "sonner";
+import type { Settings } from "@/lib/settings";
 
-const MAPS_URL = "https://maps.app.goo.gl/QN1YNYLwVPgDgvW86";
-const MAP_EMBED_QUERY =
-  "MAGADI GREENS, 20th Main Rd, Ittamadu, AGS Layout, Hosakerehalli, Bengaluru 560061";
-const STORE_WHATSAPP = "919148112233";
-
-export function StoreInfo() {
+export function StoreInfo({ settings }: { settings: Settings }) {
   const [sugg, setSugg] = useState("");
+  const MAPS_URL = settings.mapsUrl;
+  const MAP_EMBED_QUERY = `${settings.shopName}, ${settings.address}`;
+  const STORE_WHATSAPP = settings.whatsapp;
 
   return (
     <section
@@ -26,12 +25,11 @@ export function StoreInfo() {
           <div className="mb-3.5 grid gap-2 text-[14px] text-[#334236]">
             <span>
               <MapPin className="mr-1 inline size-4 text-g700" />
-              <strong>No. 24, 20th Main Rd</strong>, Ittamadu, AGS Layout, Hosakerehalli, Bengaluru
-              560061
+              {settings.address}
             </span>
             <span>
               <Clock className="mr-1 inline size-4 text-g700" />
-              Daily 6:30 AM – 9:30 PM
+              {settings.hours}
             </span>
             <span>
               <ShoppingBag className="mr-1 inline size-4 text-g700" />

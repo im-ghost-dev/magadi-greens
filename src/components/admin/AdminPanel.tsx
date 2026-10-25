@@ -5,10 +5,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, LogOut, Save, X, Loader2, CloudOff } from "lucide-react";
+import { Plus, LogOut, Save, X, Loader2, CloudOff, CheckCircle2, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { useAdmin } from "@/store/useAdmin";
 import { CATEGORY_LABEL, type Product } from "@/lib/catalogue-client";
+import { useUnsavedWarning } from "@/lib/use-unsaved-warning";
 import { AdminProductRow } from "./AdminProductRow";
 import { AdminAddProductDialog } from "./AdminAddProductDialog";
 
@@ -136,6 +137,35 @@ export function AdminPanel({ onSaved }: Props) {
     });
   }
 
+  /**
+   * Bulk toggle: stage a stock change for every product currently shown by the
+   * filters (so "mark all out of stock" respects the active category/search).
+   * Only stages a change where it actually differs from the saved value.
+   */
+  function bulkStock(nextStock: boolean) {
+    const affected = filtered.filter((p) => p.stock !== nextStock);
+    if (affected.length === 0) {
+      toast.info(nextStock ? "Everything shown is already in stock." : "Everything shown is already out of stock.");
+      return;
+    }
+    const label = nextStock ? "in stock" : "out of stock";
+    if (!confirm(`Mark ${affected.length} shown item${affected.length > 1 ? "s" : ""} as ${label}?`)) return;
+    setEdits((prev) => {
+      const next = { ...prev };
+      for (const p of affected) {
+        const base = products.find((x) => x.id === p.id);
+        if (!base) continue;
+        const e: Edit = { ...(next[p.id] ?? {}) };
+        if (base.stock === nextStock) delete e.stock;
+        else e.stock = nextStock;
+        if (Object.keys(e).length === 0) delete next[p.id];
+        else next[p.id] = e;
+      }
+      return next;
+    });
+    toast.success(`Staged ${affected.length} change${affected.length > 1 ? "s" : ""}. Click Save to publish.`);
+  }
+
   function markInvalid(key: string, bad: boolean) {
     setInvalid((prev) => {
       const n = new Set(prev);
@@ -206,6 +236,7 @@ export function AdminPanel({ onSaved }: Props) {
   }
 
   const dirtyCount = Object.keys(edits).length;
+  useUnsavedWarning(dirtyCount > 0);
 
   return (
     <div className="pb-40">
@@ -217,7 +248,7 @@ export function AdminPanel({ onSaved }: Props) {
             {products.length} items · {dirtyCount ? `${dirtyCount} unsaved` : "all saved"}
           </p>
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => setAddOpen(true)}>
             <Plus className="size-4" /> Add new
           </Button>
@@ -230,6 +261,18 @@ export function AdminPanel({ onSaved }: Props) {
             <LogOut className="size-4" /> Sign out
           </Button>
         </div>
+      </div>
+
+      {/* Bulk stock actions (apply to the items currently shown by the filters) */}
+      <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-cream px-3 py-2">
+        <span className="text-[12.5px] font-semibold text-mute">Bulk:</span>
+        <Button variant="outline" size="sm" onClick={() => bulkStock(true)} className="h-8">
+          <CheckCircle2 className="size-4 text-g600" /> Mark all in stock
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => bulkStock(false)} className="h-8">
+          <Ban className="size-4 text-destructive" /> Mark all out of stock
+        </Button>
+        <span className="text-[11.5px] text-mute">applies to the {/* count */}items shown below</span>
       </div>
 
       {/* Search + category filter */}

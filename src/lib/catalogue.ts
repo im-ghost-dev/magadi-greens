@@ -71,9 +71,8 @@ export function toProduct(row: {
     mrp: row.mrp,
     kn: row.kn,
     stock: row.stock,
-    img: row.img
-      ? row.img.replace(/^\/images\/products\/(\d+)\.jpg(\?v=\d+)?$/, "/api/photos/$1$2")
-      : null,
+    // img is now a full Supabase Storage public URL (or null). Pass it through.
+    img: row.img ?? null,
     updatedAt: row.updatedAt.toISOString(),
   };
 }

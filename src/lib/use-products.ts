@@ -32,7 +32,10 @@ export function useProducts() {
   const version = useQuery({
     queryKey: ["products-version"],
     queryFn: fetchVersion,
-    refetchInterval: 15_000, // poll every 15 s – cheap, just an aggregate
+    // Poll every 60 s – cheap aggregate query, and comfortably within the
+    // 5-minute (300 s) freshness requirement. When the version changes we
+    // refetch the full catalogue below.
+    refetchInterval: 60_000,
     refetchOnWindowFocus: true,
     refetchIntervalInBackground: false,
   });

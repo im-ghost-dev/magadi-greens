@@ -3,14 +3,14 @@
 import { useRef, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Camera, Loader2, Trash2 } from "lucide-react";
+import { Camera, Loader2, Trash2, Leaf } from "lucide-react";
 import {
   CATEGORY_LABEL,
   UNIT_INFO,
-  emojiFor,
   discOf,
   type Product,
 } from "@/lib/catalogue-client";
+import { compressToWebp } from "@/lib/image-compress";
 import type { Edit } from "./AdminPanel";
 
 type Props = {
@@ -124,9 +124,9 @@ function AdminProductRowInner({
     }
     setUploading(true);
     try {
-      const compressed = await compressImage(file);
+      const compressed = await compressToWebp(file, 800);
       const fd = new FormData();
-      fd.append("file", compressed, `${product.id}.jpg`);
+      fd.append("file", compressed, `${product.id}.webp`);
       fd.append("id", String(product.id));
       const r = await fetch("/api/admin/upload", { method: "POST", body: fd });
       const data = await r.json();
@@ -184,7 +184,7 @@ function AdminProductRowInner({
                 onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
             ) : (
-              <span>{emojiFor(view.name, view.cat)}</span>
+              <Leaf className="size-6 text-g600/50" strokeWidth={1.75} />
             )}
             <span className="absolute bottom-1 right-1 grid size-5 place-items-center rounded-full bg-white text-[12px] shadow">
               <Camera className="size-3" />
@@ -290,39 +290,4 @@ function AdminProductRowInner({
   );
 }
 
-/** Compress + resize the chosen photo on the client before uploading. */
-async function compressImage(file: File): Promise<File> {
-  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" }).catch(async () => {
-    const url = URL.createObjectURL(file);
-    try {
-      return await new Promise<HTMLImageElement>((resolve, reject) => {
-        const i = new Image();
-        i.onload = () => resolve(i);
-        i.onerror = reject;
-        i.src = url;
-      });
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  });
 
-  const W = 640;
-  const H = 480;
-  const canvas = document.createElement("canvas");
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, W, H);
-  const sw = (bmp as ImageBitmap).width || (bmp as HTMLImageElement).naturalWidth;
-  const sh = (bmp as ImageBitmap).height || (bmp as HTMLImageElement).naturalHeight;
-  const s = Math.max(W / sw, H / sh);
-  ctx.drawImage(bmp as CanvasImageSource, (W - sw * s) / 2, (H - sh * s) / 2, sw * s, sh * s);
-
-  const blob: Blob = await new Promise((resolve) =>
-    canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.82),
-  );
-  return new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", {
-    type: "image/jpeg",
-  });
-}

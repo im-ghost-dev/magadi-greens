@@ -53,7 +53,9 @@ server.log
 # Skills directory
 /skills/
 # MAGADI GREENS private data
+*.db
 db/*.db
+prisma/*.db
 db/photos/
 tool-results/
 *.log

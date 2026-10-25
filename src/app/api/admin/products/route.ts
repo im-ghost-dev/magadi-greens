@@ -7,6 +7,7 @@ import {
   requireAdmin,
   toProduct,
 } from "@/lib/catalogue";
+import { isStoredPhotoUrl } from "@/lib/photos";
 
 export const dynamic = "force-dynamic";
 
@@ -93,7 +94,7 @@ export async function PUT(req: Request) {
     if (c.stock !== undefined && typeof c.stock !== "boolean") {
       return NextResponse.json({ error: `Invalid stock flag for id ${c.id}` }, { status: 400 });
     }
-    if (c.img !== undefined && c.img !== null && !/^\/api\/photos\/\d+(\?v=\d+)?$/.test(c.img)) {
+    if (c.img !== undefined && c.img !== null && !isStoredPhotoUrl(c.img)) {
       return NextResponse.json({ error: `Invalid photo for id ${c.id}` }, { status: 400 });
     }
   }
@@ -146,7 +147,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  if (!Number.isInteger(body.id) || body.id <= 0) {
+  const id = Number(body.id);
+  if (!Number.isInteger(id) || id <= 0) {
     return NextResponse.json({ error: "Pick a positive whole-number PLU" }, { status: 400 });
   }
   if (typeof body.name !== "string" || !body.name.trim()) {
@@ -159,14 +161,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Pick a valid unit" }, { status: 400 });
   }
 
-  const existing = await db.product.findUnique({ where: { id: body.id } });
+  const existing = await db.product.findUnique({ where: { id } });
   if (existing) {
-    return NextResponse.json({ error: `PLU ${body.id} is already in use` }, { status: 400 });
+    return NextResponse.json({ error: `PLU ${id} is already in use` }, { status: 400 });
   }
 
   const created = await db.product.create({
     data: {
-      id: body.id,
+      id,
       name: body.name.trim(),
       cat: body.cat,
       unit: body.unit,

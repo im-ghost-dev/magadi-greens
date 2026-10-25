@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useProducts } from "@/lib/use-products";
+import { useSettings } from "@/lib/use-settings";
 import { useCart } from "@/store/useCart";
 import { useAdmin } from "@/store/useAdmin";
 import { Header } from "./Header";
 import { Hero } from "./Hero";
+import { TodaysSpecial } from "./TodaysSpecial";
 import { CategoryBar } from "./CategoryBar";
 import { ProductGrid } from "./ProductGrid";
 import { CartDrawer } from "./CartDrawer";
@@ -15,6 +17,7 @@ import { AdminApp } from "@/components/admin/AdminApp";
 /** The whole storefront – header, hero, category bar, product grid, store info, cart drawer. */
 export function Storefront() {
   const { products, loading, refetch } = useProducts();
+  const { settings } = useSettings();
   const cart = useCart((s) => s.cart);
   const sanitize = useCart((s) => s.sanitize);
   const adminStatus = useAdmin((s) => s.status);
@@ -93,6 +96,7 @@ export function Storefront() {
         view={view}
         onSwitchView={setView}
         adminStatus={adminStatus}
+        settings={settings}
       />
 
       {view === "admin" ? (
@@ -102,7 +106,8 @@ export function Storefront() {
       ) : (
         <main className="flex-1">
           <div className="mx-auto w-full max-w-[1180px] px-4">
-            <Hero />
+            <Hero settings={settings} />
+            <TodaysSpecial products={products} />
             <CategoryBar active={activeCat} onSelect={setActiveCat} />
             <ProductGrid
               products={products}
@@ -110,7 +115,7 @@ export function Storefront() {
               activeCat={activeCat}
               loading={loading}
             />
-            <StoreInfo />
+            <StoreInfo settings={settings} />
           </div>
         </main>
       )}
@@ -119,11 +124,20 @@ export function Storefront() {
         open={cartOpen}
         onOpenChange={setCartOpen}
         products={products}
+        settings={settings}
         onSavedOrder={() => refetch()}
       />
 
       <footer className="mt-auto border-t border-border bg-white py-5 text-center text-xs text-mute">
-        © MAGADI GREENS · Ittamadu, Bengaluru · Self pick-up only
+        <div className="mb-1">
+          © {settings.shopName} · {settings.address}
+        </div>
+        <button
+          onClick={() => setView("admin")}
+          className="inline-flex items-center gap-1 font-semibold text-g700 hover:underline"
+        >
+          Admin login
+        </button>
       </footer>
     </div>
   );

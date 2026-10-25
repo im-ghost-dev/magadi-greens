@@ -1,6 +1,8 @@
 "use client";
 
-export function Hero() {
+import type { Settings } from "@/lib/settings";
+
+export function Hero({ settings }: { settings: Settings }) {
   return (
     <section className="mt-4 flex items-center justify-between gap-5 overflow-hidden rounded-3xl bg-g900 p-7 text-white">
       <div>
@@ -23,7 +25,7 @@ export function Hero() {
           </a>
         </div>
         <div className="mt-3.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-[#cfe5d0]">
-          <span>Open daily 6:30 AM – 9:30 PM</span>
+          <span>{settings.hours}</span>
           <span>Prices updated every morning</span>
         </div>
       </div>

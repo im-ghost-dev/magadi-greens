@@ -6,20 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Minus, Plus, Trash2, MessageCircle } from "lucide-react";
-import { emojiFor, fmtQty, rupee, stepOf, maxOf, totals, totalText, UNIT_INFO, type Product } from "@/lib/catalogue-client";
+import { fmtQty, rupee, stepOf, maxOf, totals, totalText, UNIT_INFO, type Product } from "@/lib/catalogue-client";
+import { ProductThumb } from "./ProductThumb";
 import { useCart } from "@/store/useCart";
+import { cleanWhatsApp, type Settings } from "@/lib/settings";
 import { toast } from "sonner";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   products: Product[];
+  settings: Settings;
   onSavedOrder: () => void;
 };
 
-const STORE_WHATSAPP = "919148112233";
-
-export function CartDrawer({ open, onOpenChange, products, onSavedOrder }: Props) {
+export function CartDrawer({ open, onOpenChange, products, settings, onSavedOrder }: Props) {
   const cart = useCart((s) => s.cart);
   const add = useCart((s) => s.add);
   const sub = useCart((s) => s.sub);
@@ -64,17 +65,41 @@ export function CartDrawer({ open, onOpenChange, products, onSavedOrder }: Props
       return;
     }
 
+    const whatsapp = cleanWhatsApp(settings.whatsapp);
+    if (whatsapp.length < 10) {
+      toast.error("The shop's WhatsApp number isn't set up yet. Please call the store.");
+      return;
+    }
+
     setSending(true);
     const rowsTxt = lines
       .map(
         (p, i) =>
-          `${i + 1}. ${p.name} [PLU ${p.id}] × ${fmtQty(p, cart[p.id])} = ${
-            p.price == null ? "price at store" : rupee(Math.round(p.price * cart[p.id] * 100) / 100)
+          `${i + 1}. ${p.name} (PLU ${p.id}) - ${fmtQty(p, cart[p.id])} = ${
+            p.price == null
+              ? "price at store"
+              : rupee(Math.round(p.price * cart[p.id] * 100) / 100)
           }`,
       )
       .join("\n");
-    const msg = `*🌿 New self pick-up order – MAGADI GREENS*\n\n*Name:* ${name}\n*Phone:* ${phoneDigits}\n*Pick-up:* ${time}\n\n*Order:*\n${rowsTxt}\n\n*Estimated total: ${tText}*`;
-    const waLink = `https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+    // Build a clean, readable order message. encodeURIComponent handles the
+    // emoji + newlines correctly, so there's no mojibake ("�") in WhatsApp.
+    const msg = [
+      `🌿 New self pick-up order - ${settings.shopName}`,
+      "",
+      `Name: ${name.trim()}`,
+      `Phone: ${phoneDigits}`,
+      `Pick-up: ${time}`,
+      "",
+      "Order:",
+      rowsTxt,
+      "",
+      `Estimated total: ${tText}`,
+      t.ask > 0 ? "(Items marked \"price at store\" are weighed and priced at the counter.)" : "",
+    ]
+      .filter((l) => l !== "")
+      .join("\n");
+    const waLink = `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
 
     try {
       window.open(waLink, "_blank", "noopener");
@@ -114,24 +139,11 @@ export function CartDrawer({ open, onOpenChange, products, onSavedOrder }: Props
                 key={p.id}
                 className="grid grid-cols-[48px_1fr_auto] items-center gap-3 border-b border-border py-3"
               >
-                <div className="grid size-12 place-items-center overflow-hidden rounded-xl bg-g50 text-[26px]">
-                  {p.img ? (
-                    <img
-                      src={p.img}
-                      alt=""
-                      loading="lazy"
-                      className="size-full object-cover"
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        const span = document.createElement("span");
-                        span.textContent = emojiFor(p.name, p.cat);
-                        img.replaceWith(span);
-                      }}
-                    />
-                  ) : (
-                    <span>{emojiFor(p.name, p.cat)}</span>
-                  )}
-                </div>
+                <ProductThumb
+                  src={p.img}
+                  alt={p.name}
+                  className="size-12 rounded-xl"
+                />
                 <div>
                   <b className="block text-[14px] leading-tight">{p.name}</b>
                   <small className="text-[12px] text-mute">

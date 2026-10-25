@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/catalogue";
-import { photoDir, legacyPhotoDir } from "@/lib/photos";
-import { unlink } from "node:fs/promises";
-import path from "node:path";
+import { removePublic, productPhotoKey } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +21,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
   await db.product.update({ where: { id }, data: { img: null } }).catch(() => {});
-  // Best-effort: delete the file from both the current and the old location.
-  for (const dir of [photoDir(), legacyPhotoDir()]) {
-    await unlink(path.join(dir, `${id}.jpg`)).catch(() => {});
-  }
+  // Best-effort: delete the object from Supabase Storage.
+  await removePublic(productPhotoKey(id)).catch(() => {});
   return NextResponse.json({ ok: true });
 }

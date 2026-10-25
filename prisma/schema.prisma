@@ -43,3 +43,43 @@ model AdminSession {
   createdAt DateTime @default(now())
   expiresAt DateTime
 }
+
+/// Editable shop/contact info. A single row (id = 1) holds everything the
+/// shopkeeper can change: name, phone, WhatsApp number (where orders go),
+/// address, opening hours, Google Maps link and tagline.
+model Settings {
+  id         Int      @id @default(1)
+  shopName   String   @default("MAGADI GREENS")
+  tagline    String   @default("Farm fresh · Self pick-up")
+  phone      String   @default("+91 91481 12233")
+  /// Destination WhatsApp number for orders. Digits only, incl. country code.
+  whatsapp   String   @default("919148112233")
+  address    String   @default("No. 24, 20th Main Rd, Ittamadu, AGS Layout, Hosakerehalli, Bengaluru 560061")
+  hours      String   @default("Daily 6:30 AM – 9:30 PM")
+  mapsUrl    String   @default("https://maps.app.goo.gl/QN1YNYLwVPgDgvW86")
+  updatedAt  DateTime @updatedAt
+}
+
+/// "Today's Special" slots shown at the top of the home page (1–6 max).
+/// Each slot either references an existing product (productId) or is fully
+/// custom (title/priceText). img is a Supabase Storage public URL.
+model Special {
+  id        String   @id @default(cuid())
+  /// Optional link to a catalogue product (for name/photo fallback).
+  productId Int?
+  /// Custom display title (used when productId is null, or to override).
+  title     String   @default("")
+  /// Special price text, e.g. "₹49 / kg" or "₹99". Free text so the owner
+  /// can write whatever reads best.
+  priceText String   @default("")
+  /// Optional label badge, e.g. "Fresh today", "Limited stock".
+  label     String   @default("")
+  /// Optional image (Supabase Storage public URL).
+  img       String?
+  /// Display order (ascending). Lower = earlier in the carousel.
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sort])
+}

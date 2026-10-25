@@ -59,7 +59,7 @@ export function ProductGrid({ products, search, activeCat, loading }: Props) {
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
         {filtered.length ? (
-          filtered.map((p) => <ProductCard key={p.id} p={p} />)
+          filtered.map((p, i) => <ProductCard key={p.id} p={p} index={i} />)
         ) : (
           <div className="col-span-full py-12 text-center text-mute">
             <b className="block text-[17px] text-ink">No items found</b>
