@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ export interface FloatingCartBarProps {
   thumbnail?: string;
   /** Handler when "View Cart" button is clicked. If omitted, opens CartDrawer via useCart() */
   onViewCart?: () => void;
-  /** Handler when dismissed. If omitted, internal dismiss state is toggled */
+  /** Optional handler when close is clicked */
   onDismiss?: () => void;
   /** Custom wrapper CSS classes */
   className?: string;
@@ -29,7 +29,11 @@ const DEFAULT_THUMB =
 
 /**
  * Reusable floating bottom cart bar component fixed at bottom: 20px, z-index: 50.
- * Automatically hidden when cart count is 0 or when the cart drawer is open.
+ *
+ * Visibility is purely reactive based on (totalCartItems > 0 && !isPickupDrawerOpen).
+ * Clicking "×" completely empties the cart, causing the bar to animate out and
+ * resetting all product cards to "+ Add". Adding any item immediately brings the
+ * floating bar back into view without any stuck dismissed state.
  */
 export function FloatingCartBar({
   itemCount,
@@ -45,17 +49,6 @@ export function FloatingCartBar({
   const effectiveCount = itemCount !== undefined ? itemCount : cart.count;
   const reduce = useReducedMotion();
 
-  const [dismissed, setDismissed] = useState(false);
-  const [lastCount, setLastCount] = useState(effectiveCount);
-
-  // If new items are added, automatically un-dismiss the bar
-  if (effectiveCount !== lastCount) {
-    if (effectiveCount > lastCount) {
-      setDismissed(false);
-    }
-    setLastCount(effectiveCount);
-  }
-
   // Derive thumbnail from the most recent cart item image, or prop, or default
   const latestCartImg = cart.lines[cart.lines.length - 1]?.image;
   const activeThumbnail = thumbnail || latestCartImg || DEFAULT_THUMB;
@@ -70,15 +63,13 @@ export function FloatingCartBar({
 
   function handleClose(e: React.MouseEvent) {
     e.stopPropagation();
-    if (onDismiss) {
-      onDismiss();
-    } else {
-      setDismissed(true);
-    }
+    // Clicking "×" completely empties the cart
+    cart.clear();
+    onDismiss?.();
   }
 
-  // Hidden when empty, dismissed, or when the cart drawer is open
-  const isVisible = effectiveCount > 0 && !dismissed && !cart.open;
+  // Purely reactive visibility: visible whenever cart has items and drawer is closed
+  const isVisible = effectiveCount > 0 && !cart.open;
 
   return (
     <AnimatePresence>
@@ -195,11 +186,11 @@ export function FloatingCartBar({
               </span>
             </button>
 
-            {/* Circular Close Button (34px x 34px) */}
+            {/* Circular Close ("×") Button (34px x 34px) */}
             <button
               type="button"
               onClick={handleClose}
-              aria-label="Close cart bar"
+              aria-label="Empty cart and close cart bar"
               style={{
                 width: "34px",
                 height: "34px",
