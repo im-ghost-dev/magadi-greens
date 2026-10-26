@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { AmbientBackground } from "@/components/ui/AmbientBackground";
+import { Providers } from "@/components/providers";
+import { SplashWrapper } from "@/components/ui/SplashWrapper";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -49,9 +51,12 @@ export default function RootLayout({
         className={`${jakarta.variable} font-sans antialiased text-foreground min-h-screen relative overflow-x-clip bg-[#f8fafc] dark:bg-[#0f1512] transition-colors duration-500`}
         style={{ fontFamily: "var(--font-jakarta), system-ui, sans-serif" }}
       >
-        <AmbientBackground>
-          {children}
-        </AmbientBackground>
+        <Providers>
+          <SplashWrapper />
+          <AmbientBackground>
+            {children}
+          </AmbientBackground>
+        </Providers>
         <Toaster />
         <SonnerToaster />
       </body>
