@@ -11,6 +11,7 @@ import { ProductCard, ProductCardSkeleton } from "./ProductCard";
 import { CartDrawer } from "./CartDrawer";
 import { FloatingCartBar } from "./FloatingCartBar";
 import { ContactSection } from "./ContactSection";
+import { ScrollToTop } from "./ScrollToTop";
 import { AdminApp } from "@/components/admin/AdminApp";
 import { getProducts, getSettings, getSpecials, isAdmin } from "@/lib/api";
 import { useScrolled } from "@/hooks/useScrolled";
@@ -347,6 +348,7 @@ export function Storefront() {
         subtitleHref="#categories"
       />
       <CartDrawer products={products} settings={settings} />
+      <ScrollToTop />
     </div>
   );
 }

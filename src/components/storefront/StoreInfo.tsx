@@ -41,7 +41,7 @@ export function StoreInfo({ settings }: { settings: Settings }) {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             className="h-60 w-full rounded-[14px] border-0 bg-g50"
-            src={`https://maps.google.com/maps?q=${encodeURIComponent(MAP_EMBED_QUERY)}&z=16&output=embed`}
+            src={`https://www.google.com/maps?q=${encodeURIComponent(MAP_EMBED_QUERY)}&output=embed`}
           />
           <p className="mt-3">
             <a

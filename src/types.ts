@@ -66,7 +66,7 @@ export interface ShopSettings {
   shopName: string;
   tagline: string;
   phone: string;
-  whatsapp: string; // digits incl. country code, e.g. 919876543210
+  whatsapp: string; // digits incl. country code, e.g. 919148112233
   address: string;
   hours: string;
   mapsUrl: string;

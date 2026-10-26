@@ -56,7 +56,7 @@ model Settings {
   whatsapp   String   @default("919148112233")
   address    String   @default("No. 24, 20th Main Rd, Ittamadu, AGS Layout, Hosakerehalli, Bengaluru 560061")
   hours      String   @default("Daily 6:30 AM – 9:30 PM")
-  mapsUrl    String   @default("https://maps.app.goo.gl/QN1YNYLwVPgDgvW86")
+  mapsUrl    String   @default("https://maps.app.goo.gl/6Zwhj7Lxi9woBADu9?g_st=ac")
   bannerText String?
   reviewsUrl String?
   updatedAt  DateTime @updatedAt

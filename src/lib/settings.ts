@@ -23,7 +23,7 @@ export const DEFAULT_SETTINGS: Settings = {
   address:
     "No. 24, 20th Main Rd, Ittamadu, AGS Layout, Hosakerehalli, Bengaluru 560061",
   hours: "Daily 6:30 AM – 9:30 PM",
-  mapsUrl: "https://maps.app.goo.gl/QN1YNYLwVPgDgvW86",
+  mapsUrl: "https://maps.app.goo.gl/6Zwhj7Lxi9woBADu9?g_st=ac",
   bannerText: "Self pick-up only. Order online and we'll pack it fresh and keep it ready.",
   reviewsUrl: "",
   updatedAt: new Date(0).toISOString(),
