@@ -2,12 +2,15 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Moon, Search, ShoppingBasket, Sun, X } from "lucide-react";
+import { Moon, Phone, Search, ShoppingBasket, Sun, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useCart } from "@/hooks/useCart";
+import { telHref } from "@/lib/settings";
 
 interface HeaderProps {
   shopName: string;
+  bannerText?: string | null;
+  phone?: string | null;
   query: string;
   onQuery: (q: string) => void;
   onOpenAdmin: () => void;
@@ -16,6 +19,8 @@ interface HeaderProps {
 
 export function Header({
   shopName,
+  bannerText,
+  phone,
   query,
   onQuery,
   onOpenAdmin,
@@ -26,6 +31,7 @@ export function Header({
 
   // DOM Refs
   const rootRef = useRef<HTMLDivElement>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
   const brandRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLLabelElement>(null);
@@ -151,7 +157,8 @@ export function Header({
     // Measure fixed heights (never changes while scrolling)
     function measure() {
       if (!brand || !row) return;
-      stickAt = brand.offsetHeight + row.offsetHeight; // scrollY at which chip row hits top
+      const bannerH = bannerRef.current ? bannerRef.current.offsetHeight : 0;
+      stickAt = bannerH + brand.offsetHeight + row.offsetHeight; // scrollY at which chip row hits top
       range = Math.max(1, stickAt - 16); // finish morph slightly before that
     }
 
@@ -224,6 +231,31 @@ export function Header({
 
   return (
     <div className="cs w-full" id="cs" ref={rootRef}>
+      {/* ========================================================== */}
+      {/* 0. TOP ANNOUNCEMENT BANNER (Full width, dark green, white text) */}
+      {/* ========================================================== */}
+      {bannerText?.trim() && (
+        <div
+          ref={bannerRef}
+          className="w-full bg-[#0d2e1b] dark:bg-[#091f12] text-white py-2 px-4 border-b border-white/10"
+        >
+          <div className="mx-auto max-w-6xl flex flex-col items-center justify-center text-center text-xs sm:text-sm gap-0.5">
+            <p className="font-medium tracking-tight">{bannerText.trim()}</p>
+            {phone && (
+              <a
+                href={telHref(phone)}
+                className="inline-flex items-center gap-1.5 text-xs text-white/90 hover:text-white underline underline-offset-2 transition py-0.5"
+              >
+                <Phone className="h-3 w-3 shrink-0" aria-hidden />
+                <span>
+                  Call the store: <strong className="font-semibold">{phone}</strong>
+                </span>
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ========================================================== */}
       {/* 1. BRAND ROW (Fixed height 64px, scrolls away naturally)    */}
       {/* ========================================================== */}

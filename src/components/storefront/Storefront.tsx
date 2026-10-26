@@ -234,6 +234,8 @@ export function Storefront() {
     <div className="relative z-[1] min-h-[150vh]" style={{ background: "transparent" }}>
       <Header
         shopName={settings?.shopName ?? "MAGADI GREENS"}
+        bannerText={settings?.bannerText}
+        phone={settings?.phone}
         query={query}
         onQuery={setQuery}
         onOpenAdmin={() => setView("admin")}

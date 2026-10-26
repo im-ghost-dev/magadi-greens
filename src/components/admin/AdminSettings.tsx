@@ -18,6 +18,11 @@ type Form = Omit<Settings, "updatedAt">;
 const FIELDS: { key: keyof Form; label: string; hint?: string; textarea?: boolean }[] = [
   { key: "shopName", label: "Shop name" },
   { key: "tagline", label: "Tagline", hint: "Short line under the logo" },
+  {
+    key: "bannerText",
+    label: "Top announcement banner text",
+    hint: "Leave blank to hide the banner. Shown above the sticky header.",
+  },
   { key: "phone", label: "Phone (shown to customers)" },
   {
     key: "whatsapp",
@@ -27,6 +32,11 @@ const FIELDS: { key: keyof Form; label: string; hint?: string; textarea?: boolea
   { key: "address", label: "Address", textarea: true },
   { key: "hours", label: "Opening hours" },
   { key: "mapsUrl", label: "Google Maps link" },
+  {
+    key: "reviewsUrl",
+    label: "Google reviews link",
+    hint: "Leave blank to hide review buttons.",
+  },
 ];
 
 export function AdminSettings({ onSaved }: Props) {
@@ -134,14 +144,14 @@ export function AdminSettings({ onSaved }: Props) {
             {f.textarea ? (
               <Textarea
                 id={`st-${f.key}`}
-                value={form[f.key]}
+                value={form[f.key] ?? ""}
                 onChange={(e) => set(f.key, e.target.value)}
                 rows={2}
               />
             ) : (
               <Input
                 id={`st-${f.key}`}
-                value={form[f.key]}
+                value={form[f.key] ?? ""}
                 inputMode={f.key === "whatsapp" ? "numeric" : undefined}
                 onChange={(e) =>
                   set(

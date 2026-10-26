@@ -12,6 +12,11 @@ import { useUnsavedWarning } from "@/lib/use-unsaved-warning";
 const FIELDS: { key: keyof ShopSettings; label: string; placeholder?: string }[] = [
   { key: "shopName", label: "Shop name" },
   { key: "tagline", label: "Tagline" },
+  {
+    key: "bannerText",
+    label: "Top announcement banner text (leave blank to hide)",
+    placeholder: "Self pick-up only. Order online and we'll pack it fresh and keep it ready.",
+  },
   { key: "phone", label: "Phone", placeholder: "+91 91481 12233" },
   {
     key: "whatsapp",
@@ -21,6 +26,11 @@ const FIELDS: { key: keyof ShopSettings; label: string; placeholder?: string }[]
   { key: "address", label: "Address" },
   { key: "hours", label: "Opening hours" },
   { key: "mapsUrl", label: "Google Maps link" },
+  {
+    key: "reviewsUrl",
+    label: "Google reviews link (leave blank to hide review buttons)",
+    placeholder: "https://maps.app.goo.gl/...",
+  },
 ];
 
 export function ShopInfoTab({ onDirty }: { onDirty: (d: boolean) => void }) {
@@ -55,6 +65,10 @@ export function ShopInfoTab({ onDirty }: { onDirty: (d: boolean) => void }) {
       !draft.mapsUrl || /^https?:\/\//i.test(draft.mapsUrl)
         ? ""
         : "Must start with http:// or https://",
+    reviewsUrl:
+      !draft.reviewsUrl || /^https?:\/\//i.test(draft.reviewsUrl)
+        ? ""
+        : "Must start with http:// or https://",
   };
   const invalid = Object.values(errors).some(Boolean);
 
@@ -83,7 +97,7 @@ export function ShopInfoTab({ onDirty }: { onDirty: (d: boolean) => void }) {
           <Field key={f.key} label={f.label} error={errors[f.key]}>
             <input
               className={inputCls}
-              value={draft[f.key]}
+              value={draft[f.key] ?? ""}
               placeholder={f.placeholder}
               inputMode={f.key === "whatsapp" ? "numeric" : undefined}
               onChange={(e) =>

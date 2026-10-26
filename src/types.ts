@@ -70,6 +70,8 @@ export interface ShopSettings {
   address: string;
   hours: string;
   mapsUrl: string;
+  bannerText?: string | null;
+  reviewsUrl?: string | null;
 }
 
 export interface CartLine {

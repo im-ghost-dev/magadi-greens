@@ -25,6 +25,8 @@ export async function GET() {
       address: row.address,
       hours: row.hours,
       mapsUrl: row.mapsUrl,
+      bannerText: row.bannerText,
+      reviewsUrl: row.reviewsUrl,
       updatedAt: row.updatedAt.toISOString(),
     },
     { headers: { "Cache-Control": "no-store, max-age=0" } },

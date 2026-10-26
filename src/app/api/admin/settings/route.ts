@@ -13,6 +13,8 @@ type Body = {
   address?: string;
   hours?: string;
   mapsUrl?: string;
+  bannerText?: string | null;
+  reviewsUrl?: string | null;
 };
 
 const str = (v: unknown, max = 500) =>
@@ -42,6 +44,12 @@ export async function PUT(req: Request) {
   const address = str(body.address, 400);
   const hours = str(body.hours, 120);
   const mapsUrl = str(body.mapsUrl, 500);
+  const bannerText = body.bannerText !== undefined
+    ? (typeof body.bannerText === "string" ? body.bannerText.trim().slice(0, 500) : null)
+    : undefined;
+  const reviewsUrl = body.reviewsUrl !== undefined
+    ? (typeof body.reviewsUrl === "string" ? body.reviewsUrl.trim().slice(0, 500) : null)
+    : undefined;
 
   if (shopName !== undefined) {
     if (!shopName) return NextResponse.json({ error: "Shop name can't be empty" }, { status: 400 });
@@ -56,6 +64,15 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Maps link must start with http(s)://" }, { status: 400 });
     }
     data.mapsUrl = mapsUrl;
+  }
+  if (bannerText !== undefined) {
+    data.bannerText = bannerText ?? "";
+  }
+  if (reviewsUrl !== undefined) {
+    if (reviewsUrl && !/^https?:\/\//i.test(reviewsUrl)) {
+      return NextResponse.json({ error: "Google reviews link must start with http(s)://" }, { status: 400 });
+    }
+    data.reviewsUrl = reviewsUrl ?? "";
   }
   if (body.whatsapp !== undefined) {
     const wa = cleanWhatsApp(body.whatsapp);
@@ -84,6 +101,8 @@ export async function PUT(req: Request) {
       address: row.address,
       hours: row.hours,
       mapsUrl: row.mapsUrl,
+      bannerText: row.bannerText,
+      reviewsUrl: row.reviewsUrl,
       updatedAt: row.updatedAt.toISOString(),
     },
   });
