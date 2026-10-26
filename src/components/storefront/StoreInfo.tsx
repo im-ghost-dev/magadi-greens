@@ -15,7 +15,7 @@ export function StoreInfo({ settings }: { settings: Settings }) {
   return (
     <section
       id="store"
-      className="mt-9 scroll-mt-[calc(var(--header-h,72px)+16px)] border-t border-border pt-8"
+      className="mt-9 scroll-mt-[116px] border-t border-border pt-8"
     >
       <div className="grid gap-4 lg:grid-cols-[1.05fr_1fr]">
         {/* Visit the store */}

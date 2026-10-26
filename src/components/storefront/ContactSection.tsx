@@ -20,9 +20,10 @@ export function ContactSection({ settings }: { settings: ShopSettings }) {
       whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="rounded-2xl sm:rounded-3xl border border-border/80 bg-card p-5 sm:p-8 shadow-card text-card-foreground scroll-mt-20"
+      className="relative rounded-2xl sm:rounded-3xl border border-border/80 bg-card p-5 sm:p-8 shadow-card text-card-foreground scroll-mt-[116px]"
       aria-label="Visit the store"
     >
+      <div id="contact" className="absolute -top-[116px]" />
       {/* Brand Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-5">
         <div>

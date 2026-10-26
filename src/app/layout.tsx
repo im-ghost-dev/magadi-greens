@@ -48,7 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${jakarta.variable} font-sans antialiased text-foreground min-h-screen relative overflow-x-clip bg-[#f8fafc] dark:bg-[#0f1512] transition-colors duration-500`}
+        className={`${jakarta.variable} font-sans antialiased text-foreground min-h-screen relative bg-[#f8fafc] dark:bg-[#0f1512] transition-colors duration-500`}
         style={{ fontFamily: "var(--font-jakarta), system-ui, sans-serif" }}
       >
         <Providers>

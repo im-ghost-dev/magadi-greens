@@ -274,10 +274,11 @@ export function Storefront() {
 
           <section
             id="menu"
-            className="relative z-[1] mx-auto max-w-6xl px-4 mt-3 pb-28 scroll-mt-14"
+            className="relative z-[1] mx-auto max-w-6xl px-4 mt-3 pb-28 scroll-mt-[116px]"
             style={{ background: "transparent" }}
             aria-label="Products"
           >
+            <div id="categories" className="absolute -top-[116px]" />
             {products === null ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
