@@ -14,6 +14,7 @@ interface HeaderProps {
   query: string;
   onQuery: (q: string) => void;
   onOpenAdmin: () => void;
+  chips?: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -24,6 +25,7 @@ export function Header({
   query,
   onQuery,
   onOpenAdmin,
+  chips,
   children,
 }: HeaderProps) {
   const { count, bounce, setOpen: setCartOpen } = useCart();
@@ -216,7 +218,7 @@ export function Header({
       window.removeEventListener("resize", handleResize);
       if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
     };
-  }, []);
+  }, [bannerText]);
 
   // 5. Escape key to close dock search
   useEffect(() => {
@@ -376,7 +378,7 @@ export function Header({
               </button>
             </div>
             <div className="cs-chips" role="tablist">
-              {children}
+              {chips ?? children}
             </div>
           </div>
 
@@ -416,6 +418,9 @@ export function Header({
           </div>
         </div>
       </nav>
+
+      {/* Main page content rendered inside div.cs so cs-dock stays sticky for the full scroll height */}
+      {chips ? children : null}
     </div>
   );
 }
