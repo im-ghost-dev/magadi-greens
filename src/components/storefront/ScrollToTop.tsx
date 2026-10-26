@@ -43,7 +43,7 @@ export function ScrollToTop() {
     });
   }
 
-  // If floating cart bar is shown on small mobile screens (< 640px), raise up button to not overlap
+  // If floating cart bar is shown, raise up button cleanly above it with comfortable clearance
   const hasCartBar = count > 0;
 
   return (
@@ -56,6 +56,9 @@ export function ScrollToTop() {
       style={{
         position: "fixed",
         left: "max(20px, env(safe-area-inset-left, 20px))",
+        bottom: hasCartBar
+          ? "max(104px, calc(env(safe-area-inset-bottom, 0px) + 104px))"
+          : "max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px))",
         width: "48px",
         height: "48px",
         borderRadius: "50%",
@@ -76,9 +79,6 @@ export function ScrollToTop() {
         "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
         "hover:scale-105 hover:-translate-y-0.5 active:scale-95",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#0f1512]",
-        hasCartBar
-          ? "bottom-[max(84px,calc(env(safe-area-inset-bottom,0px)+84px))] sm:bottom-[max(20px,calc(env(safe-area-inset-bottom,0px)+20px))]"
-          : "bottom-[max(20px,calc(env(safe-area-inset-bottom,0px)+20px))]",
         visible
           ? "opacity-100 translate-y-0 pointer-events-auto"
           : "opacity-0 translate-y-4 pointer-events-none",

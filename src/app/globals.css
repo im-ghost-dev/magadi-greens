@@ -348,6 +348,12 @@
   backdrop-filter: blur(calc(var(--s) * 16px));
   box-shadow: 0 1px 0 color-mix(in srgb, var(--border) calc(var(--s) * 100%), transparent);
 }
+.cs-dock.is-scrolled {
+  background: color-mix(in srgb, var(--background) 90%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 var(--border), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
 .cs-dock-inner {
   position: relative;
   width: 100%;

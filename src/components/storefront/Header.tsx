@@ -5,7 +5,9 @@ import { motion } from "framer-motion";
 import { Moon, Phone, Search, ShoppingBasket, Sun, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useCart } from "@/hooks/useCart";
+import { useScrolled } from "@/hooks/useScrolled";
 import { telHref } from "@/lib/settings";
+import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   shopName: string;
@@ -30,6 +32,7 @@ export function Header({
 }: HeaderProps) {
   const { count, bounce, setOpen: setCartOpen } = useCart();
   const [isDark, setIsDark] = useState(false);
+  const isScrolled = useScrolled(50);
 
   // DOM Refs
   const rootRef = useRef<HTMLDivElement>(null);
@@ -355,7 +358,7 @@ export function Header({
       {/* 3. PINNED DOCK (Category Chips + Morphing Search Overlay)  */}
       {/* ========================================================== */}
       <nav
-        className="cs-dock"
+        className={cn("cs-dock", isScrolled && "is-scrolled shadow-xs dark:shadow-none")}
         id="csDock"
         ref={dockRef}
         data-open="false"

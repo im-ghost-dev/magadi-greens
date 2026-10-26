@@ -8,7 +8,7 @@ export function Chip({
   active,
   onClick,
   children,
-  pillId,
+  pillId = "pill",
 }: {
   active: boolean;
   onClick: () => void;
@@ -22,14 +22,14 @@ export function Chip({
       aria-pressed={active}
       whileTap={{ scale: 0.94 }}
       className={cn(
-        "relative flex h-[38px] shrink-0 flex-shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full border px-3.5 text-xs font-semibold transition-colors cursor-pointer select-none",
+        "relative flex min-h-[44px] h-[44px] shrink-0 flex-shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full border px-3.5 text-xs font-semibold transition-colors cursor-pointer select-none",
         active
           ? "border-primary text-primary-foreground"
           : "border-border bg-card text-foreground hover:bg-secondary",
         active && !pillId && "bg-primary shadow-card",
       )}
     >
-      {active && pillId && (
+      {active && (
         <motion.span
           layoutId={pillId}
           className="absolute inset-0 -z-0 rounded-full bg-primary shadow-card"

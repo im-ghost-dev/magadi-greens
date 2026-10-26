@@ -244,7 +244,13 @@ export function Storefront() {
           <CategoryChips
             options={[...FILTERS]}
             value={cat}
-            onChange={setCat}
+            onChange={(c) => {
+              setCat(c);
+              const el = document.getElementById("menu");
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }}
             counts={counts}
             inStockOnly={inStockOnly}
             onInStock={setInStockOnly}
@@ -268,7 +274,7 @@ export function Storefront() {
 
           <section
             id="menu"
-            className="relative z-[1] mx-auto max-w-6xl px-4 mt-3 pb-28"
+            className="relative z-[1] mx-auto max-w-6xl px-4 mt-3 pb-28 scroll-mt-14"
             style={{ background: "transparent" }}
             aria-label="Products"
           >
