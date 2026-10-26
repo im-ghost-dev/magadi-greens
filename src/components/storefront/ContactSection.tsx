@@ -5,17 +5,12 @@ import { Clock, MapPin, MessageCircle, Navigation, Phone, ShoppingBag } from "lu
 import type { ShopSettings } from "@/types";
 import { Logo } from "@/components/ui/Logo";
 import { whatsappUrl } from "@/lib/format";
-import { telHref } from "@/lib/settings";
+import { mapEmbedSrc, telHref } from "@/lib/settings";
 
 export function ContactSection({ settings }: { settings: ShopSettings }) {
   const shouldReduceMotion = useReducedMotion();
 
-  const mapQuery = encodeURIComponent(
-    settings.address
-      ? `${settings.shopName}, ${settings.address}`
-      : settings.shopName || "MAGADI GREENS",
-  );
-  const embedUrl = `https://www.google.com/maps?q=${mapQuery}&output=embed`;
+  const embedUrl = mapEmbedSrc();
   const reviewsLink = settings.reviewsUrl?.trim();
 
   return (

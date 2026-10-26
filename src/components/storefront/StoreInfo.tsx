@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Clock, ShoppingBag, Send } from "lucide-react";
 import { toast } from "sonner";
-import type { Settings } from "@/lib/settings";
+import { mapEmbedSrc, type Settings } from "@/lib/settings";
 
 export function StoreInfo({ settings }: { settings: Settings }) {
   const [sugg, setSugg] = useState("");
   const MAPS_URL = settings.mapsUrl;
-  const MAP_EMBED_QUERY = `${settings.shopName}, ${settings.address}`;
   const STORE_WHATSAPP = settings.whatsapp;
 
   return (
@@ -41,7 +40,7 @@ export function StoreInfo({ settings }: { settings: Settings }) {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             className="h-60 w-full rounded-[14px] border-0 bg-g50"
-            src={`https://www.google.com/maps?q=${encodeURIComponent(MAP_EMBED_QUERY)}&output=embed`}
+            src={mapEmbedSrc()}
           />
           <p className="mt-3">
             <a

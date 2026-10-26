@@ -87,21 +87,28 @@ export function FloatingCartBar({
           id="floatingCart"
           role="region"
           aria-label="Floating cart summary"
-          initial={{ y: reduce ? 0 : 50, opacity: 0, x: "-50%" }}
-          animate={{ y: 0, opacity: 1, x: "-50%" }}
-          exit={{ y: reduce ? 0 : 40, opacity: 0, x: "-50%" }}
-          transition={{ type: "spring", stiffness: 420, damping: 30 }}
+          // Only transform (y) + opacity are animated: both are GPU-composited, so no layout/paint jank.
+          // Horizontal centering uses flex (NOT translateX), so framer-motion's transform never
+          // fights a CSS transform - that conflict was the source of the jitter.
+          initial={{ y: reduce ? 0 : 24, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: reduce ? 0 : 16, opacity: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           style={{
             position: "fixed",
-            bottom: "20px",
-            left: "50%",
-            transform: "translateX(-50%)",
+            left: 0,
+            right: 0,
+            bottom: "max(20px, env(safe-area-inset-bottom))",
             zIndex: 50,
-            width: "calc(100vw - 24px)",
-            maxWidth: "420px",
+            display: "flex",
+            justifyContent: "center",
+            padding: "0 12px",
+            pointerEvents: "none",
+            willChange: "transform, opacity",
           }}
           className={cn("select-none", className)}
         >
+          <div style={{ width: "100%", maxWidth: "420px", pointerEvents: "auto" }}>
           {/* Pill Container */}
           <div
             style={{
@@ -113,7 +120,7 @@ export function FloatingCartBar({
               gap: "10px",
             }}
             className={cn(
-              "w-full transition-shadow duration-300",
+              "w-full",
               "bg-white dark:bg-[#23252d]",
               "border border-black/10 dark:border-white/10",
               "shadow-[0_12px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45)]",
@@ -234,6 +241,7 @@ export function FloatingCartBar({
                 />
               </svg>
             </button>
+          </div>
           </div>
         </motion.div>
       )}
