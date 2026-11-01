@@ -145,22 +145,28 @@ export function FloatingCartBar({
               )}
             >
               {/* Left Fresh Produce Badge */}
-              <div className="relative shrink-0">
-                <img
-                  src={activeThumbnail}
-                  alt="Fresh Produce"
-                  width={40}
-                  height={40}
-                  className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover ring-2 ring-emerald-400/40 bg-emerald-950"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = DEFAULT_THUMB;
-                  }}
-                />
+              <div id="floating-cart-target" className="relative shrink-0">
+                <motion.div
+                  animate={cart.bounce > 0 ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover ring-2 ring-emerald-400/40 bg-emerald-950 overflow-hidden flex items-center justify-center shadow-inner"
+                >
+                  <img
+                    src={activeThumbnail}
+                    alt="Fresh Produce"
+                    width={40}
+                    height={40}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = DEFAULT_THUMB;
+                    }}
+                  />
+                </motion.div>
               </div>
 
               {/* Middle Rotating Message + Browse Subtitle */}
               <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center px-0.5">
-                <div className="h-[22px] overflow-hidden relative flex items-center">
+                <div className="h-[26px] min-h-[26px] overflow-hidden relative flex items-center">
                   <AnimatePresence mode="wait">
                     <motion.span
                       key={phraseIndex}
@@ -168,7 +174,7 @@ export function FloatingCartBar({
                       animate={{ y: 0, opacity: 1 }}
                       exit={{ y: reduce ? 0 : -8, opacity: 0 }}
                       transition={{ duration: 0.25, ease: "easeOut" }}
-                      className="block text-[12.5px] sm:text-[14px] font-bold text-white tracking-tight truncate whitespace-nowrap leading-none"
+                      className="block text-[12.5px] sm:text-[14px] font-bold text-white tracking-tight truncate whitespace-nowrap leading-[1.35] pb-[1px]"
                     >
                       {phraseList[phraseIndex] ?? phraseList[0]}
                     </motion.span>
@@ -177,10 +183,10 @@ export function FloatingCartBar({
                 <a
                   href={subtitleHref}
                   onClick={handleScrollToCategories}
-                  className="inline-flex items-center gap-1 text-[11px] sm:text-[11.5px] font-semibold text-emerald-300/90 hover:text-emerald-200 transition-colors cursor-pointer truncate mt-0.5"
+                  className="inline-flex items-center gap-1 text-[11px] sm:text-[11.5px] font-semibold text-emerald-300/90 hover:text-emerald-200 transition-colors cursor-pointer mt-0.5 leading-[1.3] pb-[2px] max-w-full"
                 >
-                  <span className="truncate">{subtitle}</span>
-                  <span className="text-xs text-[#aaff00]" aria-hidden>
+                  <span className="truncate leading-[1.3] pb-[1px]">{subtitle}</span>
+                  <span className="text-xs text-[#aaff00] shrink-0 leading-none" aria-hidden>
                     ▸
                   </span>
                 </a>
@@ -200,9 +206,14 @@ export function FloatingCartBar({
                 )}
               >
                 <span className="whitespace-nowrap">Basket</span>
-                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#092213] px-1 text-[10px] font-bold text-[#aaff00]">
+                <motion.span
+                  key={`badge-${cart.bounce}`}
+                  animate={cart.bounce > 0 ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#092213] px-1 text-[10px] font-bold text-[#aaff00]"
+                >
                   {effectiveCount}
-                </span>
+                </motion.span>
               </button>
 
               {/* Discreet Empty Cart (×) Button */}

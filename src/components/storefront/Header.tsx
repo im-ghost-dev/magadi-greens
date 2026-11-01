@@ -152,7 +152,7 @@ export function Header({
             aria-label={`Open pick-up list, ${count} items`}
             className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-elev-md hover:scale-105 transition cursor-pointer"
           >
-            <ShoppingBasket className="h-4 w-4" id="cart-badge-target" />
+            <ShoppingBasket className="h-4 w-4" />
             {count > 0 && (
               <motion.span
                 key={count}
