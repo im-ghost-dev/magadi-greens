@@ -53,7 +53,7 @@ export function BottomSheet({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.5 }}
             onDragEnd={(_, i) => i.offset.y > 120 && onClose()}
-            className="relative flex max-h-[92dvh] w-full flex-col rounded-t-3xl bg-background shadow-sheet sm:max-w-lg sm:rounded-3xl"
+            className="relative flex h-[88dvh] sm:h-auto max-h-[94dvh] w-full flex-col rounded-t-3xl bg-background shadow-sheet sm:max-w-lg sm:rounded-3xl"
           >
             <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-border" />
             <div className="flex items-center justify-between px-5 pb-2 pt-2">

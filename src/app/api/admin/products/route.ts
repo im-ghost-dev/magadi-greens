@@ -94,8 +94,15 @@ export async function PUT(req: Request) {
     if (c.stock !== undefined && typeof c.stock !== "boolean") {
       return NextResponse.json({ error: `Invalid stock flag for id ${c.id}` }, { status: 400 });
     }
-    if (c.img !== undefined && c.img !== null && !isStoredPhotoUrl(c.img)) {
-      return NextResponse.json({ error: `Invalid photo for id ${c.id}` }, { status: 400 });
+    if (c.img !== undefined && c.img !== null) {
+      if (typeof c.img !== "string") {
+        return NextResponse.json({ error: `Invalid photo for id ${c.id}` }, { status: 400 });
+      }
+      const trimmed = c.img.trim();
+      if (trimmed && !isStoredPhotoUrl(trimmed)) {
+        return NextResponse.json({ error: `Invalid photo for id ${c.id}` }, { status: 400 });
+      }
+      c.img = trimmed || null;
     }
   }
 

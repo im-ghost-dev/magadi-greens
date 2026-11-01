@@ -47,7 +47,7 @@ export async function GET() {
  * Sets an httpOnly cookie with a session token on success.
  */
 export async function POST(req: Request) {
-  const secret = getAdminPassword();
+  const secret = await getAdminPassword();
   if (!secret) {
     console.error("ADMIN_PASSWORD is not set (or is shorter than 8 characters). Admin login is disabled.");
     return NextResponse.json({ error: "Admin login isn't set up on the server yet." }, { status: 503 });

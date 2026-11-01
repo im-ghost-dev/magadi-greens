@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   shopName: string;
+  logoUrl?: string | null;
   bannerText?: string | null;
   phone?: string | null;
   query: string;
@@ -22,6 +23,7 @@ interface HeaderProps {
 
 export function Header({
   shopName,
+  logoUrl,
   bannerText,
   phone,
   query,
@@ -120,7 +122,7 @@ export function Header({
           }}
           aria-label={shopName}
         >
-          <Logo name={shopName} compact />
+          <Logo name={shopName} compact logoUrl={logoUrl} />
         </div>
 
         {/* Right Action Icons: Theme Toggle & Cart */}

@@ -20,6 +20,7 @@ export async function GET() {
     {
       shopName: row.shopName,
       tagline: row.tagline,
+      logoUrl: row.logoUrl,
       phone: row.phone,
       whatsapp: row.whatsapp,
       address: row.address,

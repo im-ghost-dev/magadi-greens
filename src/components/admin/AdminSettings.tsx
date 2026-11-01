@@ -17,6 +17,11 @@ type Form = Omit<Settings, "updatedAt">;
 
 const FIELDS: { key: keyof Form; label: string; hint?: string; textarea?: boolean }[] = [
   { key: "shopName", label: "Shop name" },
+  {
+    key: "logoUrl",
+    label: "Store logo URL",
+    hint: "Direct URL to logo image, or leave blank to use the default leaf mark.",
+  },
   { key: "tagline", label: "Tagline", hint: "Short line under the logo" },
   {
     key: "bannerText",

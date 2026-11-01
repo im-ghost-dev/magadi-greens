@@ -3,6 +3,7 @@
 export type Settings = {
   shopName: string;
   tagline: string;
+  logoUrl?: string | null;
   phone: string;
   /** Destination WhatsApp number for orders (digits only, incl. country code). */
   whatsapp: string;
@@ -18,6 +19,7 @@ export type Settings = {
 export const DEFAULT_SETTINGS: Settings = {
   shopName: "MAGADI GREENS",
   tagline: "Farm fresh · Self pick-up",
+  logoUrl: null,
   phone: "+91 91481 12233",
   whatsapp: "919148112233",
   address:

@@ -166,7 +166,7 @@ export function CartDrawer({
   }
 
   const field =
-    "h-11 w-full rounded-xl border border-input bg-card px-3 text-[15px] outline-none focus:border-ring focus:ring-2 focus:ring-ring/30";
+    "h-12 w-full rounded-xl border border-input bg-card px-3.5 text-[15px] outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 transition-all";
 
   return (
     <BottomSheet
@@ -327,15 +327,32 @@ export function CartDrawer({
             Clear list
           </button>
 
-          <div className="mt-4 space-y-3">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send();
+            }}
+            autoComplete="on"
+            data-form-type="other"
+            className="mt-4 space-y-3"
+          >
             <h3 className="font-semibold text-primary-deep">Pick-up details</h3>
             <div>
               <input
+                id="pickup-customer-name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                autoCapitalize="words"
+                autoCorrect="off"
+                spellCheck={false}
+                data-lpignore="true"
+                data-form-type="other"
                 className={field}
                 placeholder="Your name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                aria-label="Name"
+                aria-label="Your name"
               />
               {touched && errors.name && (
                 <p className="mt-1 text-xs text-destructive">{errors.name}</p>
@@ -343,15 +360,24 @@ export function CartDrawer({
             </div>
             <div>
               <input
+                id="pickup-customer-phone"
+                name="tel"
+                type="tel"
+                autoComplete="tel"
+                inputMode="tel"
+                maxLength={10}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                data-lpignore="true"
+                data-form-type="other"
                 className={field}
                 placeholder="10-digit mobile number"
-                inputMode="numeric"
-                maxLength={10}
                 value={form.phone}
                 onChange={(e) =>
                   setForm({ ...form, phone: e.target.value.replace(/\D/g, "") })
                 }
-                aria-label="Phone"
+                aria-label="10-digit mobile number"
               />
               {touched && errors.phone && (
                 <p className="mt-1 text-xs text-destructive">{errors.phone}</p>
@@ -359,10 +385,13 @@ export function CartDrawer({
             </div>
             <div>
               <select
+                id="pickup-order-time"
+                name="pickup_time"
                 className={field}
                 value={form.time}
                 onChange={(e) => setForm({ ...form, time: e.target.value })}
                 aria-label="Pick-up time"
+                data-form-type="other"
               >
                 <option value="">Pick-up time…</option>
                 {TIMES.map((t) => (
@@ -373,7 +402,7 @@ export function CartDrawer({
                 <p className="mt-1 text-xs text-destructive">{errors.time}</p>
               )}
             </div>
-          </div>
+          </form>
         </>
       )}
     </BottomSheet>

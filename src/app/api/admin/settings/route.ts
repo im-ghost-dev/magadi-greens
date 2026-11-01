@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 type Body = {
   shopName?: string;
   tagline?: string;
+  logoUrl?: string | null;
   phone?: string;
   whatsapp?: string;
   address?: string;
@@ -37,9 +38,12 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const data: Record<string, string> = {};
+  const data: Record<string, string | null> = {};
   const shopName = str(body.shopName, 80);
   const tagline = str(body.tagline, 120);
+  const logoUrl = body.logoUrl !== undefined
+    ? (typeof body.logoUrl === "string" ? body.logoUrl.trim().slice(0, 1000) : null)
+    : undefined;
   const phone = str(body.phone, 40);
   const address = str(body.address, 400);
   const hours = str(body.hours, 120);
@@ -56,6 +60,7 @@ export async function PUT(req: Request) {
     data.shopName = shopName;
   }
   if (tagline !== undefined) data.tagline = tagline;
+  if (logoUrl !== undefined) data.logoUrl = logoUrl ? logoUrl : null;
   if (phone !== undefined) data.phone = phone;
   if (address !== undefined) data.address = address;
   if (hours !== undefined) data.hours = hours;
@@ -96,6 +101,7 @@ export async function PUT(req: Request) {
     settings: {
       shopName: row.shopName,
       tagline: row.tagline,
+      logoUrl: row.logoUrl,
       phone: row.phone,
       whatsapp: row.whatsapp,
       address: row.address,

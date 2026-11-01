@@ -82,3 +82,6 @@ export const productPhotoKey = (id: number) => `products/${id}.webp`;
 
 /** Object path for a "Today's Special" photo. */
 export const specialPhotoKey = (id: string) => `specials/${id}.webp`;
+
+/** Object path for the store logo. */
+export const logoPhotoKey = () => `branding/logo.webp`;

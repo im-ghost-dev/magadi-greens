@@ -310,7 +310,43 @@ export async function saveSettings(s: ShopSettings): Promise<ShopSettings> {
   return data.settings;
 }
 
+/** Upload store logo image using WebP compression. */
+export async function uploadLogoImage(file: File): Promise<string> {
+  const webp = await compressToWebp(file, 512);
+  const fd = new FormData();
+  fd.append("file", webp, "logo.webp");
+  const res = await fetch("/api/admin/settings/logo", { method: "POST", body: fd });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to upload logo");
+  }
+  const data = await res.json();
+  return data.logoUrl;
+}
+
+/** Remove store logo image and revert to default. */
+export async function removeLogoImage(): Promise<void> {
+  const res = await fetch("/api/admin/settings/logo", { method: "DELETE" });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to remove logo");
+  }
+}
+
 /* --------------------------------- Auth --------------------------------- */
+
+/** POST /api/admin/password — changes admin password. */
+export async function changeAdminPassword(currentPassword: string, newPassword: string): Promise<void> {
+  const res = await fetch("/api/admin/password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to change password");
+  }
+}
 
 /** POST /api/admin/login — authenticates against server ADMIN_PASSWORD. */
 export async function adminLogin(password: string, staySignedIn = false): Promise<boolean> {

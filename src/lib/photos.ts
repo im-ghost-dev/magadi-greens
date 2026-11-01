@@ -9,10 +9,15 @@
  * /api/photos serving path any more.
  */
 
-/** True if `url` looks like a Supabase public Storage URL or local upload URL. */
+/** True if `url` looks like a valid photo URL (Supabase Storage, /uploads/, web URLs like Unsplash, relative paths, data URIs, or empty to clear). */
 export function isStoredPhotoUrl(url: string): boolean {
+  if (typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (!trimmed) return true;
   return (
-    /^https?:\/\/.+\/storage\/v1\/object\/public\/.+/i.test(url) ||
-    url.startsWith("/uploads/")
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("data:image/")
   );
 }

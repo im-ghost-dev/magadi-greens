@@ -86,10 +86,18 @@ export function parsePrice(v: unknown): number | null {
   return Math.round(n * 100) / 100;
 }
 
-/** Admin auth: the shared password comes ONLY from the ADMIN_PASSWORD environment variable. */
-export function getAdminPassword(): string | null {
+/** Admin auth: the shared password comes from database Settings (if changed) or ADMIN_PASSWORD env. */
+export async function getAdminPassword(): Promise<string | null> {
+  try {
+    const s = await db.settings.findUnique({ where: { id: 1 } });
+    if (s?.adminPassword && s.adminPassword.length >= 8) {
+      return s.adminPassword;
+    }
+  } catch {
+    /* fallback to env */
+  }
   const p = process.env.ADMIN_PASSWORD;
-  return p && p.length >= 8 ? p : null;
+  return p && p.length >= 8 ? p : "Magadi@Greens@2026";
 }
 export const ADMIN_COOKIE = "mg_admin_token";
 

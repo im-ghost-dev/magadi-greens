@@ -28,7 +28,7 @@ export function ContactSection({ settings }: { settings: ShopSettings }) {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-5">
         <div>
           <div className="rounded-xl bg-card border border-border/60 p-2 inline-block">
-            <Logo name={settings.shopName} compact />
+            <Logo name={settings.shopName} compact logoUrl={settings.logoUrl} />
           </div>
           {settings.tagline && (
             <p className="mt-2 text-xs sm:text-sm text-muted-foreground">{settings.tagline}</p>

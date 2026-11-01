@@ -13,18 +13,22 @@ Built with **Next.js 16 (App Router)**, **TypeScript**, **Tailwind CSS**, **Fram
 * **Sticky Header:** Smooth scroll elevation shadow with real-time PLU / item search and shopping cart drawer trigger.
 * **Today's Special Carousel:** Swipeable, snap-scrolling showcase with smooth parallax image movement, active card spring scaling, and automatic hide when empty. Respects `prefers-reduced-motion`.
 * **Category Navigation:** Smooth animated active pill indicator (`Framer Motion`), item count badges, and an instant "In stock" filter toggle.
+* **Organic Floating Cart Bar:** Custom, non-generic floating island with dynamic produce highlights rotating encouraging messages ("One more? 👀", "Add something fresh 🥬", "Missing something? 🤔", etc.), live basket count, and instant jump to catalogue.
+* **Floating Scroll-to-Top:** Unobtrusive bottom-left quick return button with reactive height adjustment avoiding floating cart overlap.
 * **Smart Steppers:** Product cards with unit-aware steppers (vegetables/fruits sold by kg increment in `0.25 kg`; items sold by piece, bunch, or packet increment in whole units).
 * **Parabolic Fly-to-Cart Animation:** Tapping "+" animates the item image along a curved trajectory directly into the cart icon with a bounce effect.
 * **Real-time Price & Stock Verification:** Whenever the cart drawer is opened, prices are re-verified against the server. Deleted or out-of-stock items trigger clear customer alerts and prevent checkout until resolved.
 * **Direct WhatsApp Ordering:** Formats a clean, itemized order with total estimated pricing and opens WhatsApp directly addressed to the shop's saved number via `encodeURIComponent`.
 
 ### Shopkeeper Admin Panel
-* **Server-Checked Authentication:** Secure session cookie (`mg_admin_token`) verified server-side against `ADMIN_PASSWORD` with timing-safe comparison and brute-force protection. No fake passwords or localStorage security loopholes.
+* **Server-Checked Authentication:** Secure session cookie (`mg_admin_token`) verified server-side with timing-safe comparison and brute-force protection.
+* **Password Management:** Directly change the admin password from the settings tab with instant verification.
+* **Store Logo Customization:** Upload custom shop logo or provide an external image URL with live customer preview.
 * **Live Catalogue Editor:** 2-column cards, inline price and MRP editing, instant discount margin calculations, and stock toggles.
 * **Bulk Stock Operations:** One-click "Mark All in Stock" for morning store opening and "Mark All Out of Stock" for evening store closing.
 * **Unsaved Changes Bar:** Floating bottom indicator tracking dirty edits with "Discard" and "Save changes" options.
 * **Today's Special Manager:** Add, edit, or remove up to 6 special slots, reorder slots with up/down arrows, and preview the live carousel.
-* **Store Settings Management:** Edit store name, contact phone, WhatsApp order destination number, operating hours, address, tagline, and Google Maps location with a live storefront preview card.
+* **Store Settings Management:** Edit store name, logo, contact phone, WhatsApp order destination number, operating hours, address, tagline, and Google Maps location with a live storefront preview card.
 * **Optimized Image Processing:** Photo uploads are automatically resized and converted to lightweight WebP format (up to 800px) directly in the browser before uploading.
 
 ---
@@ -93,7 +97,6 @@ cp .env.example .env
 For local offline development with SQLite, set:
 ```ini
 DATABASE_URL="file:./prisma/dev.db"
-ADMIN_PASSWORD="admin_test_password_123"
 ```
 
 ### 4. Push Schema & Seed Database
@@ -157,7 +160,7 @@ bun run db:seed
 | :--- | :--- | :--- |
 | `DATABASE_URL` | Supabase Transaction Pooler URL (port 6543) | `postgresql://...@pooler.supabase.com:6543/postgres?pgbouncer=true` |
 | `DIRECT_URL` | Supabase Direct Session URL (port 5432) | `postgresql://...@pooler.supabase.com:5432/postgres` |
-| `ADMIN_PASSWORD` | Strong shopkeeper admin password | `SuperSecretPassword2026!` |
+| `ADMIN_PASSWORD` | Optional initial admin password (can be changed in Admin Panel) | `SetYourSecurePasswordHere` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | `https://xyz.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key | `eyJhbGciOi...` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only service role secret | `eyJhbGciOi...` |
