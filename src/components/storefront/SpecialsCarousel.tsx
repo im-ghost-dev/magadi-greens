@@ -46,7 +46,7 @@ export function SpecialsCarousel({
       initial={{ opacity: 0, y: reduce ? 0 : 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: reduce ? 0 : 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto max-w-6xl pt-6"
+      className="mx-auto max-w-6xl pt-6 w-full max-w-full overflow-x-clip"
       aria-label="Today's special"
     >
       <h2 className="flex items-center gap-2 px-4 text-lg font-semibold text-primary-deep">

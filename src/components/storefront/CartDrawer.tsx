@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, MessageCircle, Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
+import { AlertTriangle, MessageCircle, Minus, Plus, ShoppingBasket, StickyNote, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { BottomSheet } from "./BottomSheet";
 import { ProductImage } from "./ProductImage";
@@ -41,24 +41,37 @@ export function CartDrawer({
   const { open, setOpen, lines, setQty, remove, replaceLines, clear } = useCart();
   const [products, setProducts] = useState<Product[] | null>(initialProducts);
   const [priceUpdated, setPriceUpdated] = useState<Set<string>>(new Set());
-  const [form, setForm] = useState({ name: "", phone: "", time: "" });
+  const [form, setForm] = useState({ name: "", phone: "", time: "", note: "" });
+  const [noteOpen, setNoteOpen] = useState(false);
   const [touched, setTouched] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        const f = localStorage.getItem(FORM_KEY);
-        if (f) setForm(JSON.parse(f));
-      } catch {
-        /* ignore */
+    try {
+      const f = localStorage.getItem(FORM_KEY);
+      if (f) {
+        const parsed = JSON.parse(f);
+        setForm({
+          name: parsed.name ?? "",
+          phone: parsed.phone ?? "",
+          time: parsed.time ?? "",
+          note: parsed.note ?? "",
+        });
+        if (parsed.note && typeof parsed.note === "string" && parsed.note.trim()) {
+          setNoteOpen(true);
+        }
       }
-    }, 0);
-    return () => clearTimeout(timer);
+    } catch {
+      /* ignore */
+    } finally {
+      setIsLoaded(true);
+    }
   }, []);
 
   useEffect(() => {
+    if (!isLoaded) return;
     localStorage.setItem(FORM_KEY, JSON.stringify(form));
-  }, [form]);
+  }, [form, isLoaded]);
 
   // Recalculate every line from the latest product data whenever the drawer opens.
   useEffect(() => {
@@ -156,10 +169,19 @@ export function CartDrawer({
       name: form.name.trim(),
       phone: form.phone,
       time: form.time,
+      note: form.note,
       items: itemsForWhatsApp,
     });
 
-    window.open(whatsappUrl(settings.whatsapp, msg), "_blank", "noopener,noreferrer");
+    const url = whatsappUrl(settings.whatsapp, msg);
+    if (url.length > 1800) {
+      toast.warning("Please shorten your note to send on WhatsApp", {
+        description: "The order message exceeds WhatsApp's link limit.",
+      });
+      return;
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
     toast.success("Opening WhatsApp…", {
       description: "Send the message to confirm your pick-up.",
     });
@@ -321,7 +343,11 @@ export function CartDrawer({
           </ul>
           <button
             type="button"
-            onClick={clear}
+            onClick={() => {
+              clear();
+              setForm((prev) => ({ ...prev, note: "" }));
+              setNoteOpen(false);
+            }}
             className="mt-2 h-11 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline cursor-pointer"
           >
             Clear list
@@ -402,6 +428,66 @@ export function CartDrawer({
                 <p className="mt-1 text-xs text-destructive">{errors.time}</p>
               )}
             </div>
+
+            {/* Optional Customer Note for the shop */}
+            {!noteOpen ? (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setNoteOpen(true)}
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-deep transition-colors py-1 cursor-pointer"
+                >
+                  <StickyNote className="h-4 w-4" /> ＋ Add note
+                </button>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-1.5 overflow-hidden"
+              >
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="pickup-order-note"
+                    className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"
+                  >
+                    <StickyNote className="h-3.5 w-3.5 text-primary" /> Request for the shop (optional)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm((prev) => ({ ...prev, note: "" }));
+                      setNoteOpen(false);
+                    }}
+                    className="text-xs font-medium text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                  >
+                    Remove note
+                  </button>
+                </div>
+                <textarea
+                  id="pickup-order-note"
+                  name="pickup_note"
+                  rows={3}
+                  maxLength={300}
+                  placeholder="Any request for the shop? e.g. ripe mangoes, less spicy chillies…"
+                  value={form.note}
+                  onChange={(e) => setForm({ ...form, note: e.target.value })}
+                  onFocus={(e) => {
+                    setTimeout(() => {
+                      e.target.scrollIntoView({ block: "center", behavior: "smooth" });
+                    }, 100);
+                  }}
+                  className={cn(field, "h-auto py-2.5 resize-none text-base")}
+                />
+                <div className="flex justify-end">
+                  <span className="text-[11px] text-muted-foreground tabular-nums">
+                    {form.note.length}/300
+                  </span>
+                </div>
+              </motion.div>
+            )}
           </form>
         </>
       )}

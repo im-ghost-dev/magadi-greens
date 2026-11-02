@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
 import type { Product } from "@/types";
 import { ProductImage } from "./ProductImage";
 import { AnimatedQty } from "./AnimatedQty";
-import { useCart } from "@/hooks/useCart";
+import { useCartActions, useProductQty } from "@/hooks/useCart";
 import { formatQty, rupee, stepFor } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -23,18 +23,21 @@ export const ProductCard = React.memo(function ProductCard({
   isHighlighted?: boolean;
   onHighlightEnd?: () => void;
 }) {
-  const { add, qtyOf, setQty } = useCart();
-  const imgRef = useRef<HTMLDivElement>(null);
-  const qty = qtyOf(p.id);
+  const { add, setQty } = useCartActions();
+  const qty = useProductQty(p.id);
   const out = !p.inStock;
   const showMrp = p.price != null && p.mrp != null && p.mrp > p.price;
+
+  // Touch devices: disable expensive spring whileHover to avoid sticky touch states and jank
+  const canHover =
+    typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches;
 
   return (
     <motion.article
       id={`product-card-${p.id}`}
       onAnimationEnd={onHighlightEnd}
-      whileHover={out ? {} : { y: -4, scale: 1.015, transition: spring }}
-      whileTap={out ? {} : { scale: 0.98 }}
+      whileHover={out || !canHover ? undefined : { y: -4, scale: 1.015, transition: spring }}
+      whileTap={out ? undefined : { scale: 0.98 }}
       className={cn(
         "group flex flex-col rounded-2xl border border-border/70 bg-card shadow-card transition-shadow duration-200 scroll-mt-[116px]",
         !out && "elevate-hover",
@@ -44,7 +47,6 @@ export const ProductCard = React.memo(function ProductCard({
     >
       <div className="relative overflow-hidden rounded-t-2xl">
         <ProductImage
-          ref={imgRef}
           src={p.image}
           alt={p.name}
           className="img-glow aspect-square w-full bg-sheen"
@@ -116,7 +118,7 @@ export const ProductCard = React.memo(function ProductCard({
             <motion.button
               whileTap={{ scale: 0.85 }}
               aria-label={`More ${p.name}`}
-              onClick={() => add(p, imgRef.current)}
+              onClick={() => add(p)}
               className="flex h-11 w-11 items-center justify-center rounded-xl text-primary-deep cursor-pointer"
             >
               <Plus className="h-4 w-4" />
@@ -124,9 +126,9 @@ export const ProductCard = React.memo(function ProductCard({
           </div>
         ) : (
           <motion.button
-            whileTap={out ? {} : { scale: 0.94 }}
+            whileTap={out ? undefined : { scale: 0.94 }}
             disabled={out}
-            onClick={() => add(p, imgRef.current)}
+            onClick={() => add(p)}
             className="mt-2 flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-card cursor-pointer disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none disabled:cursor-not-allowed"
           >
             <Plus className="h-4 w-4" /> {out ? "Unavailable" : "Add"}

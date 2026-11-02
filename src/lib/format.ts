@@ -91,9 +91,10 @@ export function buildWhatsAppMessage(args: {
   name: string;
   phone: string;
   time: string;
+  note?: string;
   items: { product: Product; line: CartLine }[];
 }) {
-  const { settings, name, phone, time, items } = args;
+  const { settings, name, phone, time, note, items } = args;
   const est = estimate(
     items.map((i) => ({
       price: i.product.price,
@@ -114,6 +115,16 @@ export function buildWhatsAppMessage(args: {
     totalTxt += ` + ${est.storePriced} store-priced item(s)`;
   }
 
+  // Clean and normalize optional customer note
+  const cleanedNote = note
+    ? note
+        .replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, "") // strip control characters (preserve \n: 0x0A)
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim()
+    : "";
+
   return [
     `*🌿 Pick-up order — ${settings.shopName}*`,
     ``,
@@ -123,6 +134,7 @@ export function buildWhatsAppMessage(args: {
     ``,
     `*Order:*`,
     ...rows,
+    ...(cleanedNote ? [``, `*📝 Note from customer:*`, cleanedNote] : []),
     ``,
     `*Estimated total: ${totalTxt}*`,
     est.storePriced > 0

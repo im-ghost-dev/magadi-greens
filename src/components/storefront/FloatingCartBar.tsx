@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ShoppingBasket, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
 
@@ -44,10 +45,10 @@ const DEFAULT_THUMB =
  * Custom organic floating cart bar unique to MAGADI GREENS.
  *
  * Features:
- * - Fresh forest green glassmorphic pill with emerald accent borders (not a food delivery clone).
+ * - Fresh forest green glassmorphic pill with emerald accent borders.
  * - Rotating encouraging copy ("One more? 👀", "Add something fresh 🥬", etc.).
  * - Vibrant fresh-lime "View Basket" action button.
- * - Produces thumbnail with bounce micro-interaction on item add.
+ * - Produces thumbnail with compositor-thread pulse on item add.
  */
 export function FloatingCartBar({
   itemCount,
@@ -105,9 +106,15 @@ export function FloatingCartBar({
     }
   }
 
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
   const isVisible = effectiveCount > 0 && !cart.open;
 
-  return (
+  const content = (
     <AnimatePresence>
       {isVisible && (
         <motion.div
@@ -122,35 +129,29 @@ export function FloatingCartBar({
             position: "fixed",
             left: 0,
             right: 0,
-            bottom: "max(20px, env(safe-area-inset-bottom))",
+            marginInline: "auto",
+            width: "min(calc(100% - 16px), 480px)",
+            bottom: "max(16px, env(safe-area-inset-bottom))",
             zIndex: 50,
-            display: "flex",
-            justifyContent: "center",
-            padding: "0 8px sm:px-3",
+            paddingInline: "8px",
             pointerEvents: "none",
-            willChange: "transform, opacity",
           }}
           className={cn("select-none", className)}
         >
-          <div style={{ width: "100%", maxWidth: "480px", pointerEvents: "auto" }}>
-            {/* Organic Forest Green Glass Island */}
+          <div style={{ width: "100%", pointerEvents: "auto" }}>
+            {/* Organic Forest Green Solid Island (no backdrop-blur for max GPU performance) */}
             <div
               className={cn(
                 "relative flex items-center justify-between gap-2 sm:gap-2.5 rounded-full",
-                "bg-[#0d2e1b] text-white",
+                "bg-[#0d2e1b]/95 text-white",
                 "border border-emerald-500/30",
                 "py-2 px-2 sm:py-2.5 sm:px-3 pl-2 sm:pl-2.5",
                 "shadow-[0_16px_36px_rgba(7,29,17,0.48)]",
-                "backdrop-blur-xl",
               )}
             >
-              {/* Left Fresh Produce Badge */}
+              {/* Left Fresh Produce Badge: animated directly via WAAPI */}
               <div id="floating-cart-target" className="relative shrink-0">
-                <motion.div
-                  animate={cart.bounce > 0 ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover ring-2 ring-emerald-400/40 bg-emerald-950 overflow-hidden flex items-center justify-center shadow-inner"
-                >
+                <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover ring-2 ring-emerald-400/40 bg-emerald-950 overflow-hidden flex items-center justify-center shadow-inner">
                   <img
                     src={activeThumbnail}
                     alt="Fresh Produce"
@@ -161,7 +162,7 @@ export function FloatingCartBar({
                       (e.currentTarget as HTMLImageElement).src = DEFAULT_THUMB;
                     }}
                   />
-                </motion.div>
+                </div>
               </div>
 
               {/* Middle Rotating Message + Browse Subtitle */}
@@ -206,14 +207,12 @@ export function FloatingCartBar({
                 )}
               >
                 <span className="whitespace-nowrap">Basket</span>
-                <motion.span
-                  key={`badge-${cart.bounce}`}
-                  animate={cart.bounce > 0 ? { scale: [1, 1.25, 1] } : { scale: 1 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
+                <span
+                  id="floating-cart-badge"
                   className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#092213] px-1 text-[10px] font-bold text-[#aaff00]"
                 >
                   {effectiveCount}
-                </motion.span>
+                </span>
               </button>
 
               {/* Discreet Empty Cart (×) Button */}
@@ -232,4 +231,7 @@ export function FloatingCartBar({
       )}
     </AnimatePresence>
   );
+
+  if (!mounted) return null;
+  return createPortal(content, document.body);
 }

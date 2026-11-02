@@ -12,7 +12,7 @@ export function CategoryBar({ active, onSelect }: Props) {
     <div
       id="shop"
       style={{ top: "var(--header-h, 72px)" }}
-      className="sticky z-20 -mx-4 scroll-mt-[calc(var(--header-h,72px)+8px)] border-b border-border/40 bg-background/60 px-4 pb-2 pt-3 backdrop-blur-md"
+      className="sticky z-20 w-full max-w-full overflow-x-clip scroll-mt-[calc(var(--header-h,72px)+8px)] border-b border-border/40 bg-background/95 px-4 pb-2 pt-3"
     >
       <div
         style={{

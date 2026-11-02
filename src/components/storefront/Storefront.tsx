@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { SearchX } from "lucide-react";
 import { Header } from "./Header";
 import { Hero } from "./Hero";
@@ -15,6 +15,8 @@ import { ScrollToTop } from "./ScrollToTop";
 import { AdminApp } from "@/components/admin/AdminApp";
 import { getProducts, getSettings, getSpecials, isAdmin } from "@/lib/api";
 import { useScrolled } from "@/hooks/useScrolled";
+import { useSwipeNav } from "@/hooks/useSwipeNav";
+import { useCartDrawerOpen } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
 import { CATEGORIES, type Product, type ShopSettings, type Special } from "@/types";
 
@@ -219,6 +221,97 @@ export function Storefront() {
     [cat, searched],
   );
 
+  const reduce = useReducedMotion();
+  const [direction, setDirection] = useState<-1 | 1>(1);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const cartOpen = useCartDrawerOpen();
+
+  useEffect(() => {
+    try {
+      const isTouch = window.matchMedia("(hover: none)").matches;
+      const seen = localStorage.getItem("mg_swipe_hint_seen");
+      if (isTouch && !seen) {
+        setShowSwipeHint(true);
+        const timer = setTimeout(() => {
+          setShowSwipeHint(false);
+          try {
+            localStorage.setItem("mg_swipe_hint_seen", "1");
+          } catch {}
+        }, 6000);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
+  }, []);
+
+  const handleSwipeCategoryChange = useCallback(
+    (newCat: Filter) => {
+      // Keep active chip in sync: scroll active chip into view in chip row
+      requestAnimationFrame(() => {
+        const chip = document.querySelector<HTMLElement>(`[data-category-chip="${newCat}"]`);
+        chip?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+      });
+
+      // Keep user's scroll position, or scroll to top of #menu only if grid top is above viewport
+      const menuEl = document.getElementById("menu");
+      if (menuEl) {
+        const rect = menuEl.getBoundingClientRect();
+        if (rect.top < 60) {
+          menuEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+
+      // Optional light haptic
+      try {
+        navigator.vibrate?.(8);
+      } catch {}
+
+      // Dismiss hint after first swipe
+      setShowSwipeHint(false);
+      try {
+        localStorage.setItem("mg_swipe_hint_seen", "1");
+      } catch {}
+    },
+    [],
+  );
+
+  const onSwipeLeft = useCallback(() => {
+    // Swiping left moves to NEXT category (FILTERS order)
+    const currentIdx = FILTERS.indexOf(cat);
+    let nextIdx = currentIdx + 1;
+    while (nextIdx < FILTERS.length) {
+      const candidate = FILTERS[nextIdx];
+      if ((counts[candidate] ?? 0) > 0) {
+        setDirection(1);
+        setCat(candidate);
+        handleSwipeCategoryChange(candidate);
+        return;
+      }
+      nextIdx++;
+    }
+  }, [cat, counts, handleSwipeCategoryChange]);
+
+  const onSwipeRight = useCallback(() => {
+    // Swiping right moves to PREVIOUS category (FILTERS order)
+    const currentIdx = FILTERS.indexOf(cat);
+    let prevIdx = currentIdx - 1;
+    while (prevIdx >= 0) {
+      const candidate = FILTERS[prevIdx];
+      if ((counts[candidate] ?? 0) > 0) {
+        setDirection(-1);
+        setCat(candidate);
+        handleSwipeCategoryChange(candidate);
+        return;
+      }
+      prevIdx--;
+    }
+  }, [cat, counts, handleSwipeCategoryChange]);
+
+  const swipeRef = useSwipeNav<HTMLElement>({
+    onSwipeLeft,
+    onSwipeRight,
+    enabled: !cartOpen && !query,
+  });
+
   if (view === "admin") {
     return (
       <AdminApp
@@ -242,20 +335,38 @@ export function Storefront() {
         onQuery={setQuery}
         onOpenAdmin={() => setView("admin")}
         chips={
-          <CategoryChips
-            options={[...FILTERS]}
-            value={cat}
-            onChange={(c) => {
-              setCat(c);
-              const el = document.getElementById("menu");
-              if (el) {
-                el.scrollIntoView({ behavior: "smooth", block: "start" });
-              }
-            }}
-            counts={counts}
-            inStockOnly={inStockOnly}
-            onInStock={setInStockOnly}
-          />
+          <div className="w-full min-w-0 max-w-full overflow-hidden">
+            <CategoryChips
+              options={[...FILTERS]}
+              value={cat}
+              onChange={(c) => {
+                const currentIdx = FILTERS.indexOf(cat);
+                const newIdx = FILTERS.indexOf(c);
+                setDirection(newIdx >= currentIdx ? 1 : -1);
+                setCat(c);
+                const el = document.getElementById("menu");
+                if (el) {
+                  el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+              counts={counts}
+              inStockOnly={inStockOnly}
+              onInStock={setInStockOnly}
+            />
+            <AnimatePresence>
+              {showSwipeHint && !query && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="text-center text-[11px] font-medium text-muted-foreground/80 pt-1 select-none pointer-events-none"
+                >
+                  ← swipe to switch categories →
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         }
       >
         <motion.main
@@ -275,8 +386,9 @@ export function Storefront() {
 
           <section
             id="menu"
-            className="relative z-[1] mx-auto max-w-6xl px-4 mt-3 pb-28 scroll-mt-[116px]"
-            style={{ background: "transparent" }}
+            ref={swipeRef}
+            className="relative z-[1] mx-auto max-w-6xl px-4 mt-3 pb-28 scroll-mt-[116px] overflow-x-clip max-w-full"
+            style={{ background: "transparent", touchAction: "pan-y" }}
             aria-label="Products"
           >
             <div id="categories" className="absolute -top-[116px]" />
@@ -310,10 +422,17 @@ export function Storefront() {
             ) : (
               <motion.div
                 key={cat + (inStockOnly ? "-stock" : "") + (query ? "-q" : "")}
-                initial={{ opacity: 0, transform: "translate3d(0, 6px, 0)" }}
+                initial={{
+                  opacity: 0,
+                  transform: reduce
+                    ? "translate3d(0, 0, 0)"
+                    : direction === 1
+                    ? "translate3d(36px, 0, 0)"
+                    : "translate3d(-36px, 0, 0)",
+                }}
                 animate={{ opacity: 1, transform: "translate3d(0, 0, 0)" }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 will-change-[transform,opacity]"
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4"
               >
                 {visible.map((p, i) => (
                   <ProductCard

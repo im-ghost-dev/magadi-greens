@@ -27,7 +27,7 @@ export function Hero({ settings }: { settings: ShopSettings | null }) {
     : "Open daily 6:30 AM – 9:30 PM";
 
   return (
-    <section className="mx-auto max-w-6xl px-4 pt-4">
+    <section className="mx-auto max-w-6xl px-4 pt-4 w-full max-w-full overflow-hidden">
       <div className="relative overflow-hidden rounded-3xl bg-primary-deep shadow-lift">
         <motion.img
           initial={{ scale: 1.06, opacity: 0 }}

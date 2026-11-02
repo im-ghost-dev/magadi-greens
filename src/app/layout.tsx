@@ -47,15 +47,42 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{document.documentElement.setAttribute("data-splash","1")}catch(e){}try{var s=localStorage.getItem("mg_theme");var d=s?s==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark"}else{document.documentElement.classList.remove("dark");document.documentElement.style.colorScheme="light"}}catch(e){}})();`,
+          }}
+        />
+        <noscript>
+          <style>{`#app-root{visibility:visible!important}#splash-shell{display:none!important}`}</style>
+        </noscript>
+      </head>
       <body
         className={`${jakarta.variable} font-sans antialiased text-foreground min-h-screen relative bg-[#f8fafc] dark:bg-[#0f1512] transition-colors duration-500`}
         style={{ fontFamily: "var(--font-jakarta), system-ui, sans-serif" }}
       >
+        <div
+          id="splash-shell"
+          aria-hidden="true"
+          className="fixed inset-0 z-[100] grid place-items-center bg-[#f8fafc] dark:bg-[#0f1512] text-foreground"
+        >
+          <div className="relative select-none">
+            <div className="text-[clamp(2rem,11vw,5rem)] font-extrabold tracking-tight leading-none opacity-[0.18]">
+              MAGADI GREENS
+            </div>
+            <div className="absolute -bottom-5 right-0 text-[10px] tracking-widest opacity-70 tabular-nums">
+              loading... 0 %
+            </div>
+          </div>
+        </div>
+
         <Providers>
           <SplashWrapper />
-          <AmbientBackground>
-            {children}
-          </AmbientBackground>
+          <div id="app-root">
+            <AmbientBackground>
+              {children}
+            </AmbientBackground>
+          </div>
         </Providers>
         <Toaster />
         <SonnerToaster />

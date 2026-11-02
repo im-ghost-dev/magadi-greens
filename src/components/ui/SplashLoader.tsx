@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion, animate, useMotionValue, useTransform } from "framer-motion";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  animate,
+  useMotionValue,
+  useTransform,
+  useReducedMotion,
+} from "framer-motion";
 
-const KEY = "mg_splash";
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function SplashLoader({
   name = "MAGADI GREENS",
@@ -12,25 +20,41 @@ export function SplashLoader({
   name?: string;
   ready?: boolean;
 }) {
-  const [show, setShow] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return !sessionStorage.getItem(KEY);
-    } catch {
-      return false;
-    }
-  });
+  const [show, setShow] = useState(false);
   const [done, setDone] = useState(false);
   const p = useMotionValue(0);
   const pct = useTransform(p, (v) => Math.round(v));
   const clip = useTransform(p, (v) => `inset(${100 - v}% 0 0 0)`);
   const [label, setLabel] = useState(0);
-  const [reduce, setReduce] = useState(false);
+  const reduce = useReducedMotion();
+  const finishedRef = useRef(false);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setReduce(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  // Synchronously mount React splash and unmount SSR shell before first paint
+  useIsomorphicLayoutEffect(() => {
+    let shouldShow = false;
+    try {
+      shouldShow = document.documentElement.dataset.splash === "1";
+    } catch {
+      shouldShow = false;
     }
+
+    if (shouldShow) {
+      setShow(true);
+      const shell = document.getElementById("splash-shell");
+      if (shell) shell.remove();
+    } else {
+      delete document.documentElement.dataset.splash;
+      const shell = document.getElementById("splash-shell");
+      if (shell) shell.remove();
+    }
+
+    return () => {
+      // Safety cleanup on unmount or error so page is never hidden
+      delete document.documentElement.dataset.splash;
+      document.documentElement.style.overflow = "";
+      const shell = document.getElementById("splash-shell");
+      if (shell) shell.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -52,7 +76,32 @@ export function SplashLoader({
 
   useEffect(() => {
     if (!show) return;
-    const cap = setTimeout(() => finish(), 4000);
+
+    function finish() {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
+      animate(p, 100, {
+        duration: 0.35,
+        ease: "easeOut",
+        onComplete: () => {
+          // Reveal app root as the splash animation exits
+          delete document.documentElement.dataset.splash;
+          document.documentElement.style.overflow = "";
+          setTimeout(() => {
+            setDone(true);
+          }, 350);
+        },
+      });
+    }
+
+    const cap = setTimeout(() => {
+      delete document.documentElement.dataset.splash;
+      const shell = document.getElementById("splash-shell");
+      if (shell) shell.remove();
+      document.documentElement.style.overflow = "";
+      finish();
+    }, 4000);
+
     if (ready) {
       const t = setTimeout(() => finish(), reduce ? 700 : 1700);
       return () => {
@@ -61,22 +110,6 @@ export function SplashLoader({
       };
     }
     return () => clearTimeout(cap);
-
-    function finish() {
-      animate(p, 100, {
-        duration: 0.35,
-        ease: "easeOut",
-        onComplete: () => {
-          setTimeout(() => {
-            try {
-              sessionStorage.setItem(KEY, "1");
-            } catch {}
-            document.documentElement.style.overflow = "";
-            setDone(true);
-          }, 350);
-        },
-      });
-    }
   }, [show, ready, p, reduce]);
 
   if (!show) return null;

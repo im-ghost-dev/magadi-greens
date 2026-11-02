@@ -32,7 +32,7 @@ export function Header({
   chips,
   children,
 }: HeaderProps) {
-  const { count, bounce, setOpen: setCartOpen } = useCart();
+  const { count, setOpen: setCartOpen } = useCart();
   const [isDark, setIsDark] = useState(false);
   const isScrolled = useScrolled(20);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -144,9 +144,6 @@ export function Header({
           {/* Cart Button */}
           <motion.button
             type="button"
-            key={`cart-${bounce}`}
-            animate={bounce ? { scale: [1, 1.18, 0.94, 1] } : {}}
-            transition={{ duration: 0.45 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setCartOpen(true)}
             aria-label={`Open pick-up list, ${count} items`}
@@ -199,7 +196,7 @@ export function Header({
               </button>
             )}
           </label>
-          <div className="search-chips" role="tablist">
+          <div className="search-chips min-w-0 w-full max-w-full overflow-hidden" role="tablist">
             {chips ?? children}
           </div>
         </div>

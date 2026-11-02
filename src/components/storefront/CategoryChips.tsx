@@ -9,15 +9,18 @@ export function Chip({
   onClick,
   children,
   pillId = "pill",
+  dataCategory,
 }: {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
   pillId?: string | undefined;
+  dataCategory?: string;
 }) {
   return (
     <motion.button
       type="button"
+      data-category-chip={dataCategory}
       onClick={onClick}
       aria-pressed={active}
       whileTap={{ scale: 0.94 }}
@@ -73,13 +76,14 @@ export function CategoryChips<T extends string>({
           "linear-gradient(to right, black calc(100% - 24px), transparent 100%)",
       }}
       className={cn(
-        "no-scrollbar mask-edge-fade flex gap-[10px] overflow-x-auto py-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "no-scrollbar mask-edge-fade flex w-full min-w-0 max-w-full gap-[10px] overflow-x-auto overscroll-x-contain py-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >
       {options.map((o) => (
         <Chip
           key={o}
+          dataCategory={o}
           active={value === o}
           onClick={() => onChange(o)}
           pillId={pill}

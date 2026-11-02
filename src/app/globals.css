@@ -144,6 +144,11 @@
   * {
     border-color: var(--color-border);
   }
+  html, body {
+    max-width: 100%;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+  }
   html {
     -webkit-tap-highlight-color: transparent;
     scroll-behavior: smooth;
@@ -340,5 +345,20 @@
   display: flex;
   align-items: center;
   min-width: 0;
+  max-width: 100%;
   width: 100%;
+  overflow-x: clip;
+}
+
+/* Splash loader shell & pre-hydration gating */
+#splash-shell {
+  display: none;
+}
+
+html[data-splash="1"] #splash-shell {
+  display: grid;
+}
+
+html[data-splash="1"] #app-root {
+  visibility: hidden;
 }
